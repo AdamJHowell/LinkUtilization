@@ -67,7 +67,7 @@ const string HEADER1 = "Please select the link you wish to calculate utilization
 const string INFILE1 = "walk1.txt";			// Hard-coded input file 1.
 const string INFILE2 = "walk2.txt";			// Hard-coded input file 2.
 const int COUNTER32MAX = 4294967295;			// The maximum value a Counter32 can hold.
-const int COUNTER64MAX = 18446744073709551615;	// The maximum value a Counter64 can hold.
+//const long COUNTER64MAX = 18446744073709551615;	// The maximum value a Counter64 can hold.
 const int ARRAYSIZE = 100000;					// The size of the array for the files.
 
 
@@ -128,7 +128,7 @@ int main()
 		for ( int i = 0; i < fileCount1; i++ )
 		{
 			// Search for OID .1.3.6.1.2.1.2.2.1.1.x
-			ifIndexOffset = string::find ( walkArray1.find( "1.3.6.1.2.1.2.2.1.1.", 0 );
+			ifIndexOffset = walkArray1.find( "1.3.6.1.2.1.2.2.1.1.", 0 );
 		}
 		cout << endl;
 	}
