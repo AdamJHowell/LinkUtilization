@@ -56,9 +56,11 @@ Display TotalLinkUtilization (along with other variables).
 #include <string>
 #include <fstream>
 #include <array>
+#include <boost/filesystem.hpp>
 
 
 using namespace std;
+using namespace boost::filesystem;
 
 
 const string HEADER1 = "Please select the link you wish to calculate utilization for:\n";
@@ -95,6 +97,10 @@ int main()
 	int TotalLinkUtilization = 0;	// The total link utilization.
 	int fileCount1 = 0;			// The number of lines in input file 1.
 	int ifIndexOffset = 0;		// The offset in characters of the ifIndex.
+
+	// Print the PWD to the screen.
+	boost::filesystem::path new_full_path( boost::filesystem::current_path() );
+	std::cout << "Current path is:\n" << new_full_path << std::endl;
 
 	// Open a filestream for the first SNMP walk.
 	ifstream dataFile1( INFILE1 );
