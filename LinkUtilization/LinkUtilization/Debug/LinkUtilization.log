@@ -1,6 +1,1 @@
-﻿  linkutil.cpp
-c:\users\adam\documents\visual studio 2012\projects\linkutilization\linkutil.cpp(70): warning C4309: 'initializing' : truncation of constant value
-c:\users\adam\documents\visual studio 2012\projects\linkutilization\linkutil.cpp(131): error C2228: left of '.find' must have class/struct/union
-          type is 'std::string *'
-          did you intend to use '->' instead?
-cl : Command line warning D9028: minimal rebuild failure, reverting to normal build
+﻿  LinkUtilization.vcxproj -> C:\Users\adam.howell\Documents\GitHub\LinkUtilization\LinkUtilization\Debug\LinkUtilization.exe

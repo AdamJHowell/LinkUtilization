@@ -6,16 +6,20 @@ Date: 2014-11-11
 Description: This project will calculate link utilization from two SNMP Walks.
 A great deal of information about OIDs can be found here: http://tools.cisco.com/Support/SNMP/do/BrowseOID.do?local=en
 
-I declare that the following source code was written by me, or taken from public domain sources.
+I declare that the following source code was written by me, or is common knowledge, or was taken from the public domain.
 */
 
 /*
 Pseudocode:
 Open the first walk.
+Read the first sysUpTime (.1.3.6.1.2.1.1.3.0).
 Locate all links in the first walk (1.3.6.1.2.1.2.2.1.1).
 Open the second walk.
+Read the second sysUpTime (.1.3.6.1.2.1.1.3.0).
 Locate all links in the second walk (1.3.6.1.2.1.2.2.1.1).
+Subtract the first sysUpTime from the second sysUpTime to get the timeDelta.
 Discard links that do not exist in both walks.  Optionally, print a list of these discareded links to the screen.
+If the second sysUpTime is not greater than the first, print an error and exit.
 Print to screen a list of links that exist in both walks and prompt the user which link to run utilization on (ifIndex).
 
 For the selected link, read from the first walk:
@@ -24,16 +28,13 @@ For the selected link, read from the first walk:
 	ifInOctets (.1.3.6.1.2.1.2.2.1.10.13) with its counter size
 	ifOutOctets (.1.3.6.1.2.1.2.2.1.16.13) with its counter size
 For the selected link, read from the second walk:
-	sysUpTime (.1.3.6.1.2.1.1.3.0)
 	ifSpeed (.1.3.6.1.2.1.2.2.1.5.13)
 	ifInOctets (.1.3.6.1.2.1.2.2.1.10.13) with its counter size
 	ifOutOctets (.1.3.6.1.2.1.2.2.1.16.13) with its counter size
 Counter32 max value: 4294967295
 Counter64 max value: 18446744073709551615
-If the second sysUpTime is not greater than the first, print an error and exit.
 If the ifSpeed values or counter sizes do not match, print an error and exit.
-Subtract the first sysUpTime from the second sysUpTime to get the timeDelta
-Divide the timeDelta by the ifInSpeed to get maxRate
+Divide the timeDelta by the ifInSpeed to get maxRate.
 
 If the second ifInOctets is not greater than the first ifInOctets, add the counter size to the second ifInOctets.
 Subtract the first ifInOctets from the second ifInOctets to get the ifInDelta.
@@ -79,6 +80,8 @@ int main()
 {
 	string ifIndex = "";		// This is a string, because it will be taken as the users choice and suffixed to the "base" OIDs.
 	string ifDescr = "";		// This string will contain the link description.
+	string readTemp = "";		// Temporary string to hold data, usually before converting it to an int.
+	string sysUpTimeOID = ".1.3.6.1.2.1.1.3.0";	// Search string.
 	int sysUpTime1 = 0;			// The system up time from the first walk.
 	int ifSpeed1 = 0;			// The interface speed for the selected link from the first walk.
 	int ifInOctets1 = 0;		// The inbound octet count for the selected link from the first walk.
@@ -118,17 +121,26 @@ int main()
 		//cout << "Opened \"" << INFILE1 << "\" for reading." << endl;
 
 		// Create arrays to hold each file.
-		string* walkArray1 = new string[ARRAYSIZE];
-		string* walkArray2 = new string[ARRAYSIZE];
+		string* walk1Array = new string[ARRAYSIZE];
+//		string* walk2Array = new string[ARRAYSIZE];
 
 		// Read the file into the array
-		fileCount1 = fileRead( dataFile1, walkArray1 );
+		fileCount1 = fileRead( dataFile1, walk1Array );
+
+		// Loop through the first array until we find sysUpTime(.1.3.6.1.2.1.1.3.0)
+		// The actual uptime ticks will be at offest 32, and will not be a fixed length, so search to EOL.
+		for (int i = 0; i < fileCount1; i++)
+		{
+			// Search for OID .1.3.6.1.2.1.1.3.0
+			ifIndexOffset = walk1Array[i].find(sysUpTimeOID);
+		}
+		cout << endl;
 
 		// Loop through the first array, locating each link.
 		for ( int i = 0; i < fileCount1; i++ )
 		{
 			// Search for OID .1.3.6.1.2.1.2.2.1.1.x
-			ifIndexOffset = walkArray1.find( "1.3.6.1.2.1.2.2.1.1.", 0 );
+//			ifIndexOffset = walk1Array.find( "1.3.6.1.2.1.2.2.1.1.", 0 );
 		}
 		cout << endl;
 	}
