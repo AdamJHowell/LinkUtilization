@@ -73,6 +73,7 @@ const string IFDESCROID = ".1.3.6.1.2.1.2.2.1.2.";		// The OID for ifDescr.
 const string IFSPEEDOID = ".1.3.6.1.2.1.2.2.1.5.";		// The OID for ifSpeed.
 const string IFINOCTETSOID = ".1.3.6.1.2.1.2.2.1.10.";		// The OID for ifInOctets.
 const string IFOUTOCTETSOID = ".1.3.6.1.2.1.2.2.1.16.";	// The OID for ifOutOctets.
+const int PRECISION = 3;								// The number of decimal places to show for floats.
 const int COUNTER32MAX = 4294967295;					// The maximum value a Counter32 can hold.
 //const long COUNTER64MAX = 18446744073709551615;			// The maximum value a Counter64 can hold.
 const int ARRAYSIZE = 100000;							// The size of the array for the files.
@@ -108,9 +109,12 @@ int main()
 	int fileCount2 = 0;			// The number of lines in input file 2.
 	int ifIndexOffset = 0;		// The offset in characters of the ifIndex.
 
+	// Set the decimal precision for float output.
+	cout.precision( PRECISION );
+
 	// Print the PWD to the screen.
 	boost::filesystem::path new_full_path( boost::filesystem::current_path() );
-	std::cout << "Current path is:\n" << new_full_path << std::endl;
+	cout << "The SNMP walk files should be in this directory:\n" << new_full_path << '\n' << endl;
 
 	// Open a filestream for the first SNMP walk.
 	ifstream dataFile1( INFILE1 );
@@ -123,26 +127,29 @@ int main()
 	if ( dataFile1.fail() )
 	{
 		// Announce that we could not open the file.
-		cout << "Could not open file \"" << INFILE1 << "\" for reading." << endl << endl;
+		cout << "Could not open file \"" << INFILE1 << "\" for reading.\n" << endl;
 	}
 	// If the file opens properly.
 	else
 	{
 		// Test code.
-		//cout << "Opened \"" << INFILE1 << "\" for reading." << endl;
+		cout << "Opened \"" << INFILE1 << "\" for reading." << endl;
 
 		// Read the entire file into the array.
 		fileCount1 = fileRead( dataFile1, walk1Array );
 
 		// Loop through the first array until we find sysUpTime(.1.3.6.1.2.1.1.3.0).
-		// The actual uptime ticks will be at offest 32, and will not be a fixed length, so search to EOL.
 		for ( int i = 0; i < fileCount1; i++ )
 		{
 			// Search for OID .1.3.6.1.2.1.1.3.0
 			if( ifIndexOffset = walk1Array[i].find( SYSUPTIMEOID ) != string::npos )
 			{
+				//Test code.
 				cout << "Line: " << walk1Array[i] << endl;
+
+				// The actual uptime ticks will be at offest 32, and will not be a fixed length, so read to EOL.
 				sysUpTime1 = stoi( walk1Array[i].substr( 32 ) );
+				
 				//Test code.
 				cout << "sysUpTime1 = " << sysUpTime1 << endl;
 			}
@@ -156,7 +163,6 @@ int main()
 			// This OID will start at
 			ifIndexOffset = walk1Array[i].find( IFINDEXOID, 0 );
 		}
-		cout << endl;
 	}
 
 	// Open a filestream for the first SNMP walk.
@@ -172,20 +178,23 @@ int main()
 	else
 	{
 		// Test code.
-		//cout << "Opened \"" << INFILE1 << "\" for reading." << endl;
+		cout << "Opened \"" << INFILE1 << "\" for reading." << endl;
 
 		// Read the entire file into the array.
 		fileCount2 = fileRead( dataFile2, walk2Array );
 
 		// Loop through the first array until we find sysUpTime(.1.3.6.1.2.1.1.3.0).
-		// The actual uptime ticks will be at offest 32, and will not be a fixed length, so search to EOL.
 		for (int i = 0; i < fileCount2; i++)
 		{
 			// Search for OID .1.3.6.1.2.1.1.3.0
 			if( ifIndexOffset = walk2Array[i].find( SYSUPTIMEOID ) != string::npos )
 			{
+				//Test code.
 				cout << "Line: " << walk2Array[i] << endl;
+
+				// The actual uptime ticks will be at offest 32, and will not be a fixed length, so read to EOL.
 				sysUpTime2 = stoi( walk2Array[i].substr( 32 ) );
+
 				//Test code.
 				cout << "sysUpTime2 = " << sysUpTime2 << endl;
 			}
@@ -199,12 +208,24 @@ int main()
 			// This OID will start at
 			ifIndexOffset = walk1Array[i].find( IFINDEXOID, 0 );
 		}
-		cout << endl;
 	}
+
+	// Store the difference in upTimes into ifInDelta, which we use for several calculations.
 	ifInDelta = ((sysUpTime2 - sysUpTime1) / 100);
-	cout << "The time delta was " << ifInDelta << " seconds." << endl;
-	cout << "The time delta was " << ( ifInDelta / 60 ) << " minutes." << endl;
-	cout << "The time delta was " << ( ifInDelta / 60 / 60 ) << " hours." << endl;
+	cout << "The time delta was:\n\t" << ifInDelta << " second";
+	if( ifInDelta > 1 )
+	{
+		cout << "s";
+	}
+	cout << "." << endl;
+	if( ifInDelta > 60 )
+	{
+		cout << '\t' << ( ( float ) ifInDelta / 60.0 ) << " minutes." << endl;
+	}
+	if( ifInDelta > 360 )
+	{
+		cout << '\t' << ( ( float ) ifInDelta / 60.0 / 60.0 ) << " hours." << endl;
+	}
 
 	// Print the program header.
 	cout << HEADER1 << endl;
