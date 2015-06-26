@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\linkutil.cpp">
+    <ClCompile Include="Interface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Interface.cpp">
+    <ClCompile Include="linkutil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

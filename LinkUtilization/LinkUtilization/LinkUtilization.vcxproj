@@ -81,8 +81,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\linkutil.cpp" />
     <ClCompile Include="Interface.cpp" />
+    <ClCompile Include="linkutil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Interface.h" />

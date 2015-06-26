@@ -51,12 +51,8 @@ Multiply the ifTotalDelta by 8, then by 100, then divide by maxRate to get Total
 Display TotalLinkUtilization (along with other variables).
 */
 
+
 #include "Interface.h"
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <array>
-#include <boost/filesystem.hpp>
 
 
 using namespace std;
@@ -138,6 +134,8 @@ int main()
 	{
 		// Test code.
 		cout << "Opened \"" << INFILE1 << "\" for reading." << endl;
+
+		Interface interface1;
 
 		// Read the entire file into the array.
 		fileCount1 = fileRead( dataFile1, walk1Array );
