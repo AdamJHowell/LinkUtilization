@@ -13,10 +13,10 @@ I declare that the following source code was written by me, or is common knowled
 Pseudocode:
 Open the first walk.
 Read the first sysUpTime (.1.3.6.1.2.1.1.3.0).
-Locate all links in the first walk (1.3.6.1.2.1.2.2.1.1).
+Locate all links in the first walk (1.3.6.1.2.1.2.2.1.1.*).
 Open the second walk.
 Read the second sysUpTime (.1.3.6.1.2.1.1.3.0).
-Locate all links in the second walk (1.3.6.1.2.1.2.2.1.1).
+Locate all links in the second walk (1.3.6.1.2.1.2.2.1.1.*).
 Subtract the first sysUpTime from the second sysUpTime to get the timeDelta.
 Discard links that do not exist in both walks.  Optionally, print a list of these discareded links to the screen.
 If the second sysUpTime is not greater than the first, print an error and exit.
@@ -65,11 +65,18 @@ using namespace boost::filesystem;
 
 
 const string HEADER1 = "Please select the link you wish to calculate utilization for:\n";
-const string INFILE1 = "walk1.txt";			// Hard-coded input file 1.
-const string INFILE2 = "walk2.txt";			// Hard-coded input file 2.
-const int COUNTER32MAX = 4294967295;			// The maximum value a Counter32 can hold.
-//const long COUNTER64MAX = 18446744073709551615;	// The maximum value a Counter64 can hold.
-const int ARRAYSIZE = 100000;					// The size of the array for the files.
+const string INFILE1 = "walk1.txt";					// Hard-coded input file 1.
+const string INFILE2 = "walk2.txt";					// Hard-coded input file 2.
+const string SYSUPTIMEOID = ".1.3.6.1.2.1.1.3.0";			// The OID for sysUpTime.
+const string IFINDEXOID = ".1.3.6.1.2.1.2.2.1.1.";		// The OID for ifIndex.
+const string IFDESCROID = ".1.3.6.1.2.1.2.2.1.2.";		// The OID for ifDescr.
+const string IFSPEEDOID = ".1.3.6.1.2.1.2.2.1.5.";		// The OID for ifSpeed.
+const string IFINOCTETSOID = ".1.3.6.1.2.1.2.2.1.10.";		// The OID for ifInOctets.
+const string IFOUTOCTETSOID = ".1.3.6.1.2.1.2.2.1.16.";	// The OID for ifOutOctets.
+const int COUNTER32MAX = 4294967295;					// The maximum value a Counter32 can hold.
+//const long COUNTER64MAX = 18446744073709551615;			// The maximum value a Counter64 can hold.
+const int ARRAYSIZE = 100000;							// The size of the array for the files.
+const int	MAXINTERFACE = 2000;						// The maximum number of interfaces this program can deal with.
 
 
 int fileRead( ifstream& _handle, string _array[] );									// My file reading function.
@@ -81,7 +88,6 @@ int main()
 	string ifIndex = "";		// This is a string, because it will be taken as the users choice and suffixed to the "base" OIDs.
 	string ifDescr = "";		// This string will contain the link description.
 	string readTemp = "";		// Temporary string to hold data, usually before converting it to an int.
-	string sysUpTimeOID = ".1.3.6.1.2.1.1.3.0";	// Search string.
 	int sysUpTime1 = 0;			// The system up time from the first walk.
 	int ifSpeed1 = 0;			// The interface speed for the selected link from the first walk.
 	int ifInOctets1 = 0;		// The inbound octet count for the selected link from the first walk.
@@ -99,6 +105,7 @@ int main()
 	int ifTotalDelta = 0;		// The sum of the inbound and outbound octet deltas.
 	int TotalLinkUtilization = 0;	// The total link utilization.
 	int fileCount1 = 0;			// The number of lines in input file 1.
+	int fileCount2 = 0;			// The number of lines in input file 2.
 	int ifIndexOffset = 0;		// The offset in characters of the ifIndex.
 
 	// Print the PWD to the screen.
@@ -107,6 +114,10 @@ int main()
 
 	// Open a filestream for the first SNMP walk.
 	ifstream dataFile1( INFILE1 );
+
+	// Create arrays to hold each file.
+	string* walk1Array = new string[ARRAYSIZE];
+	string* walk2Array = new string[ARRAYSIZE];
 
 	// Test for file error.
 	if ( dataFile1.fail() )
@@ -120,19 +131,21 @@ int main()
 		// Test code.
 		//cout << "Opened \"" << INFILE1 << "\" for reading." << endl;
 
-		// Create arrays to hold each file.
-		string* walk1Array = new string[ARRAYSIZE];
-//		string* walk2Array = new string[ARRAYSIZE];
-
-		// Read the file into the array
+		// Read the entire file into the array.
 		fileCount1 = fileRead( dataFile1, walk1Array );
 
-		// Loop through the first array until we find sysUpTime(.1.3.6.1.2.1.1.3.0)
+		// Loop through the first array until we find sysUpTime(.1.3.6.1.2.1.1.3.0).
 		// The actual uptime ticks will be at offest 32, and will not be a fixed length, so search to EOL.
-		for (int i = 0; i < fileCount1; i++)
+		for ( int i = 0; i < fileCount1; i++ )
 		{
 			// Search for OID .1.3.6.1.2.1.1.3.0
-			ifIndexOffset = walk1Array[i].find(sysUpTimeOID);
+			if( ifIndexOffset = walk1Array[i].find( SYSUPTIMEOID ) != string::npos )
+			{
+				cout << "Line: " << walk1Array[i] << endl;
+				sysUpTime1 = stoi( walk1Array[i].substr( 32 ) );
+				//Test code.
+				cout << "sysUpTime1 = " << sysUpTime1 << endl;
+			}
 		}
 		cout << endl;
 
@@ -140,10 +153,59 @@ int main()
 		for ( int i = 0; i < fileCount1; i++ )
 		{
 			// Search for OID .1.3.6.1.2.1.2.2.1.1.x
-//			ifIndexOffset = walk1Array.find( "1.3.6.1.2.1.2.2.1.1.", 0 );
+			// This OID will start at
+			ifIndexOffset = walk1Array[i].find( IFINDEXOID, 0 );
 		}
 		cout << endl;
 	}
+
+	// Open a filestream for the first SNMP walk.
+	ifstream dataFile2( INFILE2 );
+
+	// Test for file error.
+	if ( dataFile2.fail() )
+	{
+		// Announce that we could not open the file.
+		cout << "Could not open file \"" << INFILE2 << "\" for reading." << endl << endl;
+	}
+	// If the file opens properly.
+	else
+	{
+		// Test code.
+		//cout << "Opened \"" << INFILE1 << "\" for reading." << endl;
+
+		// Read the entire file into the array.
+		fileCount2 = fileRead( dataFile2, walk2Array );
+
+		// Loop through the first array until we find sysUpTime(.1.3.6.1.2.1.1.3.0).
+		// The actual uptime ticks will be at offest 32, and will not be a fixed length, so search to EOL.
+		for (int i = 0; i < fileCount2; i++)
+		{
+			// Search for OID .1.3.6.1.2.1.1.3.0
+			if( ifIndexOffset = walk2Array[i].find( SYSUPTIMEOID ) != string::npos )
+			{
+				cout << "Line: " << walk2Array[i] << endl;
+				sysUpTime2 = stoi( walk2Array[i].substr( 32 ) );
+				//Test code.
+				cout << "sysUpTime2 = " << sysUpTime2 << endl;
+			}
+		}
+		cout << endl;
+
+		// Loop through the first array, locating each link.
+		for ( int i = 0; i < fileCount1; i++ )
+		{
+			// Search for OID .1.3.6.1.2.1.2.2.1.1.x
+			// This OID will start at
+			ifIndexOffset = walk1Array[i].find( IFINDEXOID, 0 );
+		}
+		cout << endl;
+	}
+	ifInDelta = ((sysUpTime2 - sysUpTime1) / 100);
+	cout << "The time delta was " << ifInDelta << " seconds." << endl;
+	cout << "The time delta was " << ( ifInDelta / 60 ) << " minutes." << endl;
+	cout << "The time delta was " << ( ifInDelta / 60 / 60 ) << " hours." << endl;
+
 	// Print the program header.
 	cout << HEADER1 << endl;
 
