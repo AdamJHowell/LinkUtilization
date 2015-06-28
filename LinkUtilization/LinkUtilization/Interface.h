@@ -35,6 +35,17 @@ public:
 	void setOutOctets2( const int );		// setInOctets2() will set the ifOutOctets2 for this interface.
 	void setOctetCounterSize1( const int );	// setOctetCounterSize1() will set the ifOctetCounterSize1 for this interface.
 	void setOctetCounterSize2( const int );	// setOctetCounterSize2() will set the ifOctetCounterSize2 for this interface.
-	
+
+	int getIndex() { return ifIndex; };					// getIndex() will return the ifIndex for this interface.
+	string getDescr() { return ifDescr; };					// getDescr() will return the ifDescr for this interface.
+	int getSpeed1() { return ifSpeed1; };					// getSpeed1() will return the ifSpeed1 for this interface.
+	int getSpeed2() { return ifSpeed2; };					// getSpeed2() will return the ifSpeed2 for this interface.
+	int getInOctets1() { return ifInOctets1; };				// getInOctets1() will return the ifInOctets1 for this interface.
+	int getInOctets2() { return ifInOctets2; };				// getInOctets2() will return the ifInOctets2 for this interface.
+	int getOutOctets1() { return ifOutOctets1; };			// getInOctets1() will set the ifOutOctets1 for this interface.
+	int getOutOctets2() { return ifOutOctets2; };			// getInOctets1() will set the ifOutOctets1 for this interface.
+	int getOctetCounterSize1() { return ifOctetCounterSize1; };	// getOctetCounterSize1() will set the ifOctetCounterSize1 for this interface.
+	int getOctetCounterSize2() { return ifOctetCounterSize2; };	// getOctetCounterSize2() will set the ifOctetCounterSize2 for this interface.
+
 	~Interface();					// Destructor.
 };

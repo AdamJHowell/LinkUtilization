@@ -116,6 +116,8 @@ int main()
 	boost::filesystem::path new_full_path( boost::filesystem::current_path() );
 	cout << "The SNMP walk files should be in this directory:\n" << new_full_path << '\n' << endl;
 
+#pragma region Walk1
+
 	// Open a filestream for the first SNMP walk.
 	ifstream dataFile1( INFILE1 );
 
@@ -133,8 +135,9 @@ int main()
 	else
 	{
 		// Test code.
-		cout << "Opened \"" << INFILE1 << "\" for reading." << endl;
+		//cout << "Opened \"" << INFILE1 << "\" for reading." << endl;
 
+		// Create an Interface class object.
 		Interface interface1;
 
 		// Read the entire file into the array.
@@ -147,25 +150,33 @@ int main()
 			if( walk1Array[i].find( SYSUPTIMEOID ) != string::npos )
 			{
 				//Test code.
-				cout << "Line: " << walk1Array[i] << endl;
+				//cout << "Line: " << walk1Array[i] << endl;
 
 				// The actual uptime ticks will be at offest 32, and will not be a fixed length, so read to EOL.
 				sysUpTime1 = stoi( walk1Array[i].substr( 32 ) );
 				
 				//Test code.
-				cout << "sysUpTime1 = " << sysUpTime1 << endl;
+				//cout << "sysUpTime1 = " << sysUpTime1 << endl;
 			}
 			// Locate each link by searching for ifIndex (.1.3.6.1.2.1.2.2.1.1.x).
 			// The ifIndex is the numeric portion after the last dot in the OID, or the value after "INTEGER: "
 			if( walk1Array[i].find( IFINDEXOID ) != string::npos )
 			{
-				// Search for the ifIndex itself.
+				// Since we found the OID, search for the text INTEGER: since we know the actual index is 9 characters ater this.
 				if( ( ifIndexOffset = walk1Array[i].find( "INTEGER: " ) ) != string::npos )
 				{
+					// The actual index should be 9 characters after INTEGER:
 					ifIndex = ( walk1Array[i].substr( ifIndexOffset + 9 ) );
 					indexCount++;
+
 					//Test code.
 					cout << "Found ifIndex: " << ifIndex << " at: " << ifIndexOffset << endl;
+
+					// Set the Interface object ifIndex to the newly found index.
+					interface1.setIndex( stoi( ifIndex ) );
+
+					//Test code.
+					cout << "Class ifIndex: " << interface1.getIndex() << endl;
 				}
 			}
 		}
@@ -174,6 +185,9 @@ int main()
 		cout << "Found " << indexCount << " interfaces in walk 1." << endl;
 	}
 	dataFile1.close();
+
+#pragma endregion Walk1
+#pragma region Walk2
 
 	// Open a filestream for the first SNMP walk.
 	ifstream dataFile2( INFILE2 );
@@ -188,7 +202,7 @@ int main()
 	else
 	{
 		// Test code.
-		cout << "Opened \"" << INFILE1 << "\" for reading." << endl;
+		//cout << "Opened \"" << INFILE1 << "\" for reading." << endl;
 
 		// Read the entire file into the array.
 		fileCount2 = fileRead( dataFile2, walk2Array );
@@ -200,13 +214,13 @@ int main()
 			if( walk2Array[i].find( SYSUPTIMEOID ) != string::npos )
 			{
 				//Test code.
-				cout << "Line: " << walk2Array[i] << endl;
+				//cout << "Line: " << walk2Array[i] << endl;
 
 				// The actual uptime ticks will be at offest 32, and will not be a fixed length, so read to EOL.
 				sysUpTime2 = stoi( walk2Array[i].substr( 32 ) );
 
 				//Test code.
-				cout << "sysUpTime2 = " << sysUpTime2 << endl;
+				//cout << "sysUpTime2 = " << sysUpTime2 << endl;
 			}
 
 			// Locate each link by searching for ifIndex (.1.3.6.1.2.1.2.2.1.1.x).
@@ -216,6 +230,8 @@ int main()
 		cout << endl;
 	}
 	dataFile2.close();
+
+#pragma endregion Walk
 
 	// Store the difference in upTimes into ifInDelta, which we use for several calculations.
 	if( sysUpTime1 > sysUpTime2 )
