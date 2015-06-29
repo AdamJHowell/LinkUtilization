@@ -1,4 +1,4 @@
-﻿Build started 6/29/2015 1:03:20 AM.
+﻿Build started 6/29/2015 12:28:29 PM.
      1>Project "C:\Users\Adam\Documents\GitHub\LinkUtilization\LinkUtilization\LinkUtilization\LinkUtilization.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          H:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /I"C:\Program Files\boost_1_58_0" /I"C:\Program Files\boost_1_58_0\boost" /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt linkutil.cpp
@@ -11,4 +11,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:03.38
+Time Elapsed 00:00:03.77

@@ -72,7 +72,7 @@ void Interface::setSpeed2( const int _speed2 )
 // Returns:		none
 // Preconditions:	none
 // Postconditions:	none
-void Interface::setInOctets1( const int _inOctets1 )
+void Interface::setInOctets1( const unsigned long _inOctets1 )
 {
 	ifInOctets1 = _inOctets1;
 }
@@ -84,7 +84,7 @@ void Interface::setInOctets1( const int _inOctets1 )
 // Returns:		none
 // Preconditions:	none
 // Postconditions:	none
-void Interface::setInOctets2( const int _inOctets2 )
+void Interface::setInOctets2( const unsigned long _inOctets2 )
 {
 	ifInOctets2 = _inOctets2;
 }
@@ -96,7 +96,7 @@ void Interface::setInOctets2( const int _inOctets2 )
 // Returns:		none
 // Preconditions:	none
 // Postconditions:	none
-void Interface::setOutOctets1( const int _outOctets1 )
+void Interface::setOutOctets1( const unsigned long _outOctets1 )
 {
 	ifOutOctets1 = _outOctets1;
 }
@@ -108,7 +108,7 @@ void Interface::setOutOctets1( const int _outOctets1 )
 // Returns:		none
 // Preconditions:	none
 // Postconditions:	none
-void Interface::setOutOctets2( const int _outOctets2 )
+void Interface::setOutOctets2( const unsigned long _outOctets2 )
 {
 	ifOutOctets2 = _outOctets2;
 }

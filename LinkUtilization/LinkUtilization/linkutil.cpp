@@ -88,12 +88,12 @@ int main()
 	int stringOffset = 0;		// The offest within the line where the search text was found.
 	int sysUpTime1 = 0;			// The system up time from the first walk.
 	int ifSpeed1 = 0;			// The interface speed for the selected link from the first walk.
-	int ifInOctets1 = 0;		// The inbound octet count for the selected link from the first walk.
-	int ifOutOctets1 = 0;		// The outbound octet count for the selected link from the first walk.
+	unsigned long ifInOctets1 = 0;		// The inbound octet count for the selected link from the first walk.
+	unsigned long ifOutOctets1 = 0;		// The outbound octet count for the selected link from the first walk.
 	int sysUpTime2 = 0;			// The system up time from the second walk.
 	int ifSpeed2 = 0;			// The interface speed for the selected link in the second walk
-	unsigned int ifInOctets2 = 0;		// The inbound octet count for the selected link in the second walk.
-	unsigned int ifOutOctets2 = 0;		// The outbound octet count for the selected link in the second walk.
+	unsigned long ifInOctets2 = 0;		// The inbound octet count for the selected link in the second walk.
+	unsigned long ifOutOctets2 = 0;		// The outbound octet count for the selected link in the second walk.
 	int timeDelta = 0;			// The difference between the first and second up times.
 	int maxRate = 0;			// The maximum rate of the links.
 	int ifInDelta = 0;			// The difference between the first and second inbound octet counts.
@@ -240,11 +240,14 @@ int main()
 				// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
 				if( ( stringOffset = walk1Array[i].find( "COUNTER32: " ) ) != string::npos )
 				{
+					//Test code.
+					//cout << "Found text: " << ( ( walk1Array[i].substr( stringOffset + 11 ) ) ) << endl;
+
 					// The actual speed should be 11 characters after INTEGER:
-					ifInOctets1 = stoi( ( walk1Array[i].substr( stringOffset + 11 ) ) );
+					ifInOctets1 = stoul( ( walk1Array[i].substr( stringOffset + 11 ) ) );
 					
 					//Test code.
-					//cout << "Found ifInOctets1: " << ifInOctets1 << " at: " << stringOffset + 11 << endl;
+					//cout << "Converted to UL int: " << ifInOctets1 << " at: " << stringOffset + 11 << endl;
 
 					// Set the Interface object ifIndex to the newly found index.
 					interface1.setInOctets1( ( ifInOctets1 ) );
@@ -262,7 +265,7 @@ int main()
 				if( ( stringOffset = walk1Array[i].find( "COUNTER32: " ) ) != string::npos )
 				{
 					// The actual speed should be 11 characters after INTEGER:
-					ifOutOctets1 = stoi( ( walk1Array[i].substr( stringOffset + 11 ) ) );
+					ifOutOctets1 = stoul( ( walk1Array[i].substr( stringOffset + 11 ) ) );
 					
 					//Test code.
 					//cout << "Found ifOutOctets1: " << ifOutOctets1 << " at: " << stringOffset + 11 << endl;
