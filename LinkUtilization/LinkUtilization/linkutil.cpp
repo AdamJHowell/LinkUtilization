@@ -59,7 +59,7 @@ using namespace boost::filesystem;
 
 
 int fileRead( ifstream& _handle, string _array[] );									// My file reading function.
-void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLength );		// My interface populating function.
+void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLength, int _walkNumber );	// My interface populating function.
 void splitString( const string _str, string& _orig, string& _dest, int& _mile, int& _cost );	// My string splitting function.
 
 
@@ -144,23 +144,14 @@ int main()
 	// Create an Interface class object.
 	Interface interface1;
 
-	//Test code.
-	//oidRead( walk1Array, 2, interface1, fileCount1 );
-
-	// Loop through the first array until we find several OIDs.
+	// Loop through the first array until we find sysUpTime, all ifIndexes, all ifDescrs.
 	for ( int i = 0; i < fileCount1; i++ )
 	{
 		// Search for sysUpTime (.1.3.6.1.2.1.1.3.0).
 		if( walk1Array[i].find( SYSUPTIMEOID ) != string::npos )
 		{
-			//Test code.
-			//cout << "Line: " << walk1Array[i] << endl;
-
 			// The actual uptime ticks will be at offest 32, and will not be a fixed length, so read to EOL.
 			sysUpTime1 = stoi( walk1Array[i].substr( 32 ) );
-				
-			//Test code.
-			//cout << "sysUpTime1 = " << sysUpTime1 << endl;
 		}
 
 		// Search for ifIndex (.1.3.6.1.2.1.2.2.1.1.x).
@@ -174,14 +165,8 @@ int main()
 				ifIndex = ( walk1Array[i].substr( ifIndexOffset + 9 ) );
 				indexCount++;
 
-				//Test code.
-				//cout << "Found ifIndex: " << ifIndex << " at: " << ifIndexOffset << endl;
-
 				// Set the Interface object ifIndex to the newly found index.
 				interface1.setIndex( stoi( ifIndex ) );
-
-				//Test code.
-				//cout << "Class ifIndex: " << interface1.getIndex() << endl;
 			}
 		}
 
@@ -194,88 +179,23 @@ int main()
 			{
 				// The actual description should be 8 characters after INTEGER:
 				ifDescr = ( walk1Array[i].substr( stringOffset + 8 ) );
-					
-				//Test code.
-				//cout << "Found ifDescr: " << ifDescr << " at: " << stringOffset + 8 << endl;
 
 				// Set the Interface object ifIndex to the newly found index.
 				interface1.setDescr( ( ifDescr ) );
-
-				//Test code.
-				//cout << "Class ifDescr: " << interface1.getDescr() << endl;
 			}
 		}
-
-		// Search for ifSpeed (.1.3.6.1.2.1.2.2.1.5.x).
-		// The ifSpeed is the numeric portion after "GAUGE32: ".
-		if( walk1Array[i].find( IFSPEEDOID ) != string::npos )
-		{
-			// Since we found the OID, search for the text GAUGE32: since we know the actual index is 9 characters ater this.
-			if( ( stringOffset = walk1Array[i].find( "GAUGE32: " ) ) != string::npos )
-			{
-				// The actual speed should be 9 characters after INTEGER:
-				ifSpeed1 = stoi( ( walk1Array[i].substr( stringOffset + 9 ) ) );
-					
-				//Test code.
-				//cout << "Found ifSpeed: " << ifSpeed1 << " at: " << stringOffset + 8 << endl;
-
-				// Set the Interface object ifIndex to the newly found index.
-				interface1.setSpeed1( ( ifSpeed1 ) );
-
-				//Test code.
-				//cout << "Class ifSpeed1: " << interface1.getSpeed1() << endl;
-			}
-		}
-			
-		// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.10.x).
-		// The ifInOctets is the numeric portion after "COUNTER32: ".  This number rolls to zero when it hits COUNTER32MAX.
-		if( walk1Array[i].find( IFINOCTETSOID ) != string::npos )
-		{
-			// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
-			if( ( stringOffset = walk1Array[i].find( "COUNTER32: " ) ) != string::npos )
-			{
-				//Test code.
-				//cout << "Found text: " << ( ( walk1Array[i].substr( stringOffset + 11 ) ) ) << endl;
-
-				// The actual speed should be 11 characters after INTEGER:
-				ifInOctets1 = stoul( ( walk1Array[i].substr( stringOffset + 11 ) ) );
-					
-				//Test code.
-				//cout << "Converted to UL int: " << ifInOctets1 << " at: " << stringOffset + 11 << endl;
-
-				// Set the Interface object ifIndex to the newly found index.
-				interface1.setInOctets1( ( ifInOctets1 ) );
-
-				//Test code.
-				//cout << "Class ifInOctets1: " << interface1.getInOctets1() << endl;
-			}
-		}
-
-		// Search for ifOutOctets (.1.3.6.1.2.1.2.2.1.16.x).
-		// The ifInOctets is the numeric portion after "COUNTER32: ".  This number rolls to zero when it hits COUNTER32MAX.
-		if( walk1Array[i].find( IFOUTOCTETSOID ) != string::npos )
-		{
-			// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
-			if( ( stringOffset = walk1Array[i].find( "COUNTER32: " ) ) != string::npos )
-			{
-				// The actual speed should be 11 characters after INTEGER:
-				ifOutOctets1 = stoul( ( walk1Array[i].substr( stringOffset + 11 ) ) );
-					
-				//Test code.
-				//cout << "Found ifOutOctets1: " << ifOutOctets1 << " at: " << stringOffset + 11 << endl;
-
-				// Set the Interface object ifIndex to the newly found index.
-				interface1.setOutOctets1( ( ifOutOctets1 ) );
-
-				//Test code.
-				//cout << "Class ifOutOctets1: " << interface1.getOutOctets1() << endl;
-			}
-		}
-		cout << "Class:\n\tifIndex: " << interface1.getIndex() << "\n\tifDescr: " << interface1.getDescr() << "\n\tifSpeed: " << interface1.getSpeed1() << "\n\tifInOctets: " << interface1.getInOctets1() << "\n\tifOutOctets: " << interface1.getOutOctets1() << endl;
-		cout << endl;
-		//Test code.
-		cout << "Found " << indexCount << " interfaces in walk 1." << endl;
 	}
+	//Test code.
+	oidRead( walk1Array, 2, interface1, fileCount1, 1 );
+
+	// Display the resultant Interface-class object.
+	cout << "Class walk 1:\n\tifIndex: " << interface1.getIndex() << "\n\tifDescr: " << interface1.getDescr();
+	cout << "\n\tifSpeed: " << interface1.getSpeed1() << "\n\tifInOctets: " << interface1.getInOctets1();
+	cout << "\n\tifOutOctets: " << interface1.getOutOctets1() << endl;
+	cout << endl;
+
+	//Test code.
+	cout << "Found " << indexCount << " interfaces in walk 1." << endl;
 
 #pragma endregion Walk1
 #pragma region Walk2
@@ -301,28 +221,57 @@ int main()
 		// Loop through the first array until we find sysUpTime(.1.3.6.1.2.1.1.3.0).
 		for (int i = 0; i < fileCount2; i++)
 		{
-			// Search for OID .1.3.6.1.2.1.1.3.0
+			// Search for sysUpTime (.1.3.6.1.2.1.1.3.0).
 			if( walk2Array[i].find( SYSUPTIMEOID ) != string::npos )
 			{
-				//Test code.
-				//cout << "Line: " << walk2Array[i] << endl;
-
 				// The actual uptime ticks will be at offest 32, and will not be a fixed length, so read to EOL.
 				sysUpTime2 = stoi( walk2Array[i].substr( 32 ) );
-
-				//Test code.
-				//cout << "sysUpTime2 = " << sysUpTime2 << endl;
 			}
 
-			// Locate each link by searching for ifIndex (.1.3.6.1.2.1.2.2.1.1.x).
-			// This OID will start at offset 34 or higher (depending on if the index is a single digit or more).
-			ifIndexOffset = walk2Array[i].find( IFINDEXOID, 0 );
+			// Search for ifIndex (.1.3.6.1.2.1.2.2.1.1.x).
+			// The ifIndex is the numeric portion after the last dot in the OID, or the value after "INTEGER: "
+			if( walk2Array[i].find( IFINDEXOID ) != string::npos )
+			{
+				// Since we found the OID, search for the text INTEGER: since we know the actual index is 9 characters ater this.
+				if( ( ifIndexOffset = walk2Array[i].find( "INTEGER: " ) ) != string::npos )
+				{
+					// The actual index should be 9 characters after INTEGER:
+					ifIndex = ( walk2Array[i].substr( ifIndexOffset + 9 ) );
+					indexCount++;
+
+					// Set the Interface object ifIndex to the newly found index.
+					//interface1.setIndex( stoi( ifIndex ) );
+				}
+			}
+
+			// Search for ifDescr (.1.3.6.1.2.1.2.2.1.2.x).
+			// The ifDescr is the text portion after "STRING: ".
+			if( walk2Array[i].find( IFDESCROID ) != string::npos )
+			{
+				// Since we found the OID, search for the text STRING: since we know the actual index is 9 characters ater this.
+				if( ( stringOffset = walk2Array[i].find( "STRING: " ) ) != string::npos )
+				{
+					// The actual description should be 8 characters after INTEGER:
+					ifDescr = ( walk2Array[i].substr( stringOffset + 8 ) );
+
+					// Set the Interface object ifIndex to the newly found index.
+					//interface1.setDescr( ( ifDescr ) );
+				}
+			}
 		}
 		cout << endl;
 	}
 	dataFile2.close();
+	//Test code.
+	oidRead( walk2Array, 2, interface1, fileCount1, 2 );
 
-#pragma endregion Walk
+	// Display the resultant Interface-class object.
+	cout << "Class walk 2:\n\tifIndex: " << interface1.getIndex() << "\n\tifDescr: " << interface1.getDescr();
+	cout << "\n\tifSpeed: " << interface1.getSpeed2() << "\n\tifInOctets: " << interface1.getInOctets2();
+	cout << "\n\tifOutOctets: " << interface1.getOutOctets2() << endl;
+	cout << endl;
+
+#pragma endregion Walk2
 
 	// Store the difference in upTimes into ifInDelta, which we use for several calculations.
 	if( sysUpTime1 > sysUpTime2 )
@@ -399,7 +348,7 @@ int fileRead( ifstream& _handle, string _array[] )
 // Returns:		none
 // Preconditions:	none
 // Postconditions:	none
-void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLength )
+void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLength, int _walkNumber )
 {
 	// Read in ifSpeed, ifInOctets, and ifOutOctets.
 	// Later I may add discards and errors.
@@ -408,20 +357,77 @@ void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLe
 	// Loop through the first array until we find several OIDs.
 	for ( int i = 0; i < _arrayLength; i++ )
 	{
-		// Search for ifSpeed (.1.3.6.1.2.1.2.2.1.5.*).
-		if( _array[i].find( IFSPEEDOID + to_string( _ifIndex ) ) != string::npos )
+		if( _walkNumber == 1 )
 		{
-			//Test code.
-			//cout << "Line: " << _array[i] << endl;
-
-			if( ( stringOffset = _array[i].find( "GAUGE32: " ) ) != string::npos )
+			// Search for ifSpeed (.1.3.6.1.2.1.2.2.1.5.*).
+			if( _array[i].find( IFSPEEDOID + to_string( _ifIndex ) ) != string::npos )
 			{
-				// The actual interface speed will be 9 characters after "GAUGE32: " at offest 32, and will not be a fixed length, so read to EOL.
-				_interface.setSpeed1( stoi( _array[i].substr( stringOffset + 9 ) ) );
-
-				//Test code.
-				cout << "oidRead found ifSpeed: " << _interface.getSpeed1() << " for ifIndex: " << _ifIndex << " at: " << stringOffset + 9 << endl;
+				if( ( stringOffset = _array[i].find( "GAUGE32: " ) ) != string::npos )
+				{
+					// The actual interface speed will be 9 characters after "GAUGE32: " at offest 32, and will not be a fixed length, so read to EOL.
+					_interface.setSpeed1( stoi( _array[i].substr( stringOffset + 9 ) ) );
+				}
 			}
+			// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.10.x).
+			// The ifInOctets is the numeric portion after "COUNTER32: ".  This number rolls to zero when it hits COUNTER32MAX.
+			if( _array[i].find( IFINOCTETSOID ) != string::npos )
+			{
+				// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
+				if( ( stringOffset = _array[i].find( "COUNTER32: " ) ) != string::npos )
+				{
+					// The actual speed should be 11 characters after INTEGER:
+					_interface.setInOctets1( ( stoul( ( _array[i].substr( stringOffset + 11 ) ) ) ) );
+				}
+			}
+			// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.16.x).
+			// The ifInOctets is the numeric portion after "COUNTER32: ".  This number rolls to zero when it hits COUNTER32MAX.
+			if( _array[i].find( IFOUTOCTETSOID ) != string::npos )
+			{
+				// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
+				if( ( stringOffset = _array[i].find( "COUNTER32: " ) ) != string::npos )
+				{
+					// The actual speed should be 11 characters after INTEGER:
+					_interface.setOutOctets1( ( stoul( ( _array[i].substr( stringOffset + 11 ) ) ) ) );
+				}
+			}
+		}
+		else if( _walkNumber == 2 )
+		{
+			// Search for ifSpeed (.1.3.6.1.2.1.2.2.1.5.*).
+			if( _array[i].find( IFSPEEDOID + to_string( _ifIndex ) ) != string::npos )
+			{
+				if( ( stringOffset = _array[i].find( "GAUGE32: " ) ) != string::npos )
+				{
+					// The actual interface speed will be 9 characters after "GAUGE32: " at offest 32, and will not be a fixed length, so read to EOL.
+					_interface.setSpeed2( stoi( _array[i].substr( stringOffset + 9 ) ) );
+				}
+			}
+			// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.10.x).
+			// The ifInOctets is the numeric portion after "COUNTER32: ".  This number rolls to zero when it hits COUNTER32MAX.
+			if( _array[i].find( IFINOCTETSOID ) != string::npos )
+			{
+				// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
+				if( ( stringOffset = _array[i].find( "COUNTER32: " ) ) != string::npos )
+				{
+					// The actual speed should be 11 characters after INTEGER:
+					_interface.setInOctets2( ( stoul( ( _array[i].substr( stringOffset + 11 ) ) ) ) );
+				}
+			}
+			// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.16.x).
+			// The ifInOctets is the numeric portion after "COUNTER32: ".  This number rolls to zero when it hits COUNTER32MAX.
+			if( _array[i].find( IFOUTOCTETSOID ) != string::npos )
+			{
+				// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
+				if( ( stringOffset = _array[i].find( "COUNTER32: " ) ) != string::npos )
+				{
+					// The actual speed should be 11 characters after INTEGER:
+					_interface.setOutOctets2( ( stoul( ( _array[i].substr( stringOffset + 11 ) ) ) ) );
+				}
+			}
+		}
+		else
+		{
+			cout << "The wrong walk number was passed to oidRead()." << endl;
 		}
 	}
 }
