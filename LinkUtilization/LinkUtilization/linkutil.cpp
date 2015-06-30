@@ -55,57 +55,41 @@ Display TotalLinkUtilization (along with other variables).
 #include "Interface.h"
 
 
-using namespace std;
 using namespace boost::filesystem;
 
 
-const string HEADER1 = "This program will search two SNMP walks and provide information from them.\n";
-const string HEADER2 = "Please select the link you wish to calculate utilization for:\n";
-const string INFILE1 = "walk1.txt";					// Hard-coded input file 1.
-const string INFILE2 = "walk2.txt";					// Hard-coded input file 2.
-const string SYSUPTIMEOID = ".1.3.6.1.2.1.1.3.0";			// The OID for sysUpTime.
-const string IFINDEXOID = ".1.3.6.1.2.1.2.2.1.1.";		// The OID for ifIndex.
-const string IFDESCROID = ".1.3.6.1.2.1.2.2.1.2.";		// The OID for ifDescr.
-const string IFSPEEDOID = ".1.3.6.1.2.1.2.2.1.5.";		// The OID for ifSpeed.
-const string IFINOCTETSOID = ".1.3.6.1.2.1.2.2.1.10.";		// The OID for ifInOctets.
-const string IFOUTOCTETSOID = ".1.3.6.1.2.1.2.2.1.16.";	// The OID for ifOutOctets.
-const int PRECISION = 3;								// The number of decimal places to show for floats.
-const unsigned int COUNTER32MAX = 4294967295;					// The maximum value a Counter32 can hold.
-//const long COUNTER64MAX = 18446744073709551615;			// The maximum value a Counter64 can hold.
-const int ARRAYSIZE = 100000;							// The size of the array for the files.
-const int	MAXINTERFACE = 2000;						// The maximum number of interfaces this program can deal with.
-
-
 int fileRead( ifstream& _handle, string _array[] );									// My file reading function.
+void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLength );		// My interface populating function.
 void splitString( const string _str, string& _orig, string& _dest, int& _mile, int& _cost );	// My string splitting function.
 
 
 int main()
 {
-	string ifIndex = "";		// This is a string, because it will be taken as the users choice and suffixed to the "base" OIDs.
-	string ifDescr = "";		// This string will contain the link description.
-	string readTemp = "";		// Temporary string to hold data, usually before converting it to an int.
-	int stringOffset = 0;		// The offest within the line where the search text was found.
-	int sysUpTime1 = 0;			// The system up time from the first walk.
-	int ifSpeed1 = 0;			// The interface speed for the selected link from the first walk.
-	unsigned long ifInOctets1 = 0;		// The inbound octet count for the selected link from the first walk.
-	unsigned long ifOutOctets1 = 0;		// The outbound octet count for the selected link from the first walk.
-	int sysUpTime2 = 0;			// The system up time from the second walk.
-	int ifSpeed2 = 0;			// The interface speed for the selected link in the second walk
-	unsigned long ifInOctets2 = 0;		// The inbound octet count for the selected link in the second walk.
-	unsigned long ifOutOctets2 = 0;		// The outbound octet count for the selected link in the second walk.
-	int timeDelta = 0;			// The difference between the first and second up times.
-	int maxRate = 0;			// The maximum rate of the links.
-	int ifInDelta = 0;			// The difference between the first and second inbound octet counts.
-	int inLinkUtilization = 0; 	// The inbound link utilization.
-	int ifOutDelta = 0;			// The difference between the first and second outbound octet counts.
-	int outLinkUtilization = 0;	// The outbound link utilization.
-	int ifTotalDelta = 0;		// The sum of the inbound and outbound octet deltas.
-	int TotalLinkUtilization = 0;	// The total link utilization.
-	int fileCount1 = 0;			// The number of lines in input file 1.
-	int fileCount2 = 0;			// The number of lines in input file 2.
-	int ifIndexOffset = 0;		// The offset in characters of the ifIndex.
-	int indexCount = 0;			// The number of interfaces located.
+	string ifIndex = "";			// This is a string, because it will be taken as the users choice and suffixed to the "base" OIDs.
+	string ifDescr = "";			// This string will contain the link description.
+	string readTemp = "";			// Temporary string to hold data, usually before converting it to an int.
+	string ifIndexArray[MAXINTERFACE];	// An array to hold all discovered interface descriptions, the ifIndex will be the array index.
+	int stringOffset = 0;			// The offest within the line where the search text was found.
+	int sysUpTime1 = 0;				// The system up time from the first walk.
+	int ifSpeed1 = 0;				// The interface speed for the selected link from the first walk.
+	unsigned long ifInOctets1 = 0;	// The inbound octet count for the selected link from the first walk.
+	unsigned long ifOutOctets1 = 0;	// The outbound octet count for the selected link from the first walk.
+	int sysUpTime2 = 0;				// The system up time from the second walk.
+	int ifSpeed2 = 0;				// The interface speed for the selected link in the second walk
+	unsigned long ifInOctets2 = 0;	// The inbound octet count for the selected link in the second walk.
+	unsigned long ifOutOctets2 = 0;	// The outbound octet count for the selected link in the second walk.
+	int timeDelta = 0;				// The difference between the first and second up times.
+	int maxRate = 0;				// The maximum rate of the links.
+	int ifInDelta = 0;				// The difference between the first and second inbound octet counts.
+	int inLinkUtilization = 0; 		// The inbound link utilization.
+	int ifOutDelta = 0;				// The difference between the first and second outbound octet counts.
+	int outLinkUtilization = 0;		// The outbound link utilization.
+	int ifTotalDelta = 0;			// The sum of the inbound and outbound octet deltas.
+	int TotalLinkUtilization = 0;		// The total link utilization.
+	int fileCount1 = 0;				// The number of lines in input file 1.
+	int fileCount2 = 0;				// The number of lines in input file 2.
+	int ifIndexOffset = 0;			// The offset in characters of the ifIndex.
+	int indexCount = 0;				// The number of interfaces located.
 
 	// Set the decimal precision for float output.
 	cout.precision( PRECISION );
@@ -113,9 +97,11 @@ int main()
 	// Print the program header.
 	cout << HEADER1 << endl;
 
-	if ( COUNTER32MAX > std::numeric_limits<int>::max() )
+	//if ( COUNTER32MAX > std::numeric_limits<unsigned long>::max() )
+	if ( COUNTER32MAX > sizeof( ifInOctets1 ) )
 	{
 		cout << "This system may not be able to operate on some interfaces." << endl;
+		cout << COUNTER32MAX << " > " << sizeof( ifInOctets1 ) << endl;
 	}
 	else
 	{
@@ -126,20 +112,23 @@ int main()
 	boost::filesystem::path new_full_path( boost::filesystem::current_path() );
 	cout << "The SNMP walk files should be in this directory:\n" << new_full_path << '\n' << endl;
 
+	// Create arrays to hold each file.
+	string* walk1Array = new string[ARRAYSIZE];
+	string* walk2Array = new string[ARRAYSIZE];
+	
 #pragma region Walk1
 
 	// Open a filestream for the first SNMP walk.
 	ifstream dataFile1( INFILE1 );
-
-	// Create arrays to hold each file.
-	string* walk1Array = new string[ARRAYSIZE];
-	string* walk2Array = new string[ARRAYSIZE];
 
 	// Test for file error.
 	if ( dataFile1.fail() )
 	{
 		// Announce that we could not open the file.
 		cout << "Could not open file \"" << INFILE1 << "\" for reading.\n" << endl;
+		// Pause so the user can read the screen.
+		system( "PAUSE" );
+		return 1;
 	}
 	// If the file opens properly.
 	else
@@ -147,142 +136,146 @@ int main()
 		// Test code.
 		//cout << "Opened \"" << INFILE1 << "\" for reading." << endl;
 
-		// Create an Interface class object.
-		Interface interface1;
-
 		// Read the entire file into the array.
 		fileCount1 = fileRead( dataFile1, walk1Array );
+	}
+	dataFile1.close();
 
-		// Loop through the first array until we find several OIDs.
-		for ( int i = 0; i < fileCount1; i++ )
+	// Create an Interface class object.
+	Interface interface1;
+
+	//Test code.
+	//oidRead( walk1Array, 2, interface1, fileCount1 );
+
+	// Loop through the first array until we find several OIDs.
+	for ( int i = 0; i < fileCount1; i++ )
+	{
+		// Search for sysUpTime (.1.3.6.1.2.1.1.3.0).
+		if( walk1Array[i].find( SYSUPTIMEOID ) != string::npos )
 		{
-			// Search for sysUpTime (.1.3.6.1.2.1.1.3.0).
-			if( walk1Array[i].find( SYSUPTIMEOID ) != string::npos )
-			{
-				//Test code.
-				//cout << "Line: " << walk1Array[i] << endl;
+			//Test code.
+			//cout << "Line: " << walk1Array[i] << endl;
 
-				// The actual uptime ticks will be at offest 32, and will not be a fixed length, so read to EOL.
-				sysUpTime1 = stoi( walk1Array[i].substr( 32 ) );
+			// The actual uptime ticks will be at offest 32, and will not be a fixed length, so read to EOL.
+			sysUpTime1 = stoi( walk1Array[i].substr( 32 ) );
 				
+			//Test code.
+			//cout << "sysUpTime1 = " << sysUpTime1 << endl;
+		}
+
+		// Search for ifIndex (.1.3.6.1.2.1.2.2.1.1.x).
+		// The ifIndex is the numeric portion after the last dot in the OID, or the value after "INTEGER: "
+		if( walk1Array[i].find( IFINDEXOID ) != string::npos )
+		{
+			// Since we found the OID, search for the text INTEGER: since we know the actual index is 9 characters ater this.
+			if( ( ifIndexOffset = walk1Array[i].find( "INTEGER: " ) ) != string::npos )
+			{
+				// The actual index should be 9 characters after INTEGER:
+				ifIndex = ( walk1Array[i].substr( ifIndexOffset + 9 ) );
+				indexCount++;
+
 				//Test code.
-				//cout << "sysUpTime1 = " << sysUpTime1 << endl;
-			}
+				//cout << "Found ifIndex: " << ifIndex << " at: " << ifIndexOffset << endl;
 
-			// Search for ifIndex (.1.3.6.1.2.1.2.2.1.1.x).
-			// The ifIndex is the numeric portion after the last dot in the OID, or the value after "INTEGER: "
-			if( walk1Array[i].find( IFINDEXOID ) != string::npos )
-			{
-				// Since we found the OID, search for the text INTEGER: since we know the actual index is 9 characters ater this.
-				if( ( ifIndexOffset = walk1Array[i].find( "INTEGER: " ) ) != string::npos )
-				{
-					// The actual index should be 9 characters after INTEGER:
-					ifIndex = ( walk1Array[i].substr( ifIndexOffset + 9 ) );
-					indexCount++;
+				// Set the Interface object ifIndex to the newly found index.
+				interface1.setIndex( stoi( ifIndex ) );
 
-					//Test code.
-					//cout << "Found ifIndex: " << ifIndex << " at: " << ifIndexOffset << endl;
-
-					// Set the Interface object ifIndex to the newly found index.
-					interface1.setIndex( stoi( ifIndex ) );
-
-					//Test code.
-					cout << "Class ifIndex: " << interface1.getIndex() << endl;
-				}
-			}
-
-			// Search for ifDescr (.1.3.6.1.2.1.2.2.1.2.x).
-			// The ifDescr is the text portion after "STRING: ".
-			if( walk1Array[i].find( IFDESCROID ) != string::npos )
-			{
-				// Since we found the OID, search for the text STRING: since we know the actual index is 9 characters ater this.
-				if( ( stringOffset = walk1Array[i].find( "STRING: " ) ) != string::npos )
-				{
-					// The actual description should be 8 characters after INTEGER:
-					ifDescr = ( walk1Array[i].substr( stringOffset + 8 ) );
-					
-					//Test code.
-					//cout << "Found ifDescr: " << ifDescr << " at: " << stringOffset + 8 << endl;
-
-					// Set the Interface object ifIndex to the newly found index.
-					interface1.setDescr( ( ifDescr ) );
-
-					//Test code.
-					cout << "Class ifDescr: " << interface1.getDescr() << endl;
-				}
-			}
-
-			// Search for ifSpeed (.1.3.6.1.2.1.2.2.1.5.x).
-			// The ifSpeed is the numeric portion after "GAUGE32: ".
-			if( walk1Array[i].find( IFSPEEDOID ) != string::npos )
-			{
-				// Since we found the OID, search for the text GAUGE32: since we know the actual index is 9 characters ater this.
-				if( ( stringOffset = walk1Array[i].find( "GAUGE32: " ) ) != string::npos )
-				{
-					// The actual speed should be 9 characters after INTEGER:
-					ifSpeed1 = stoi( ( walk1Array[i].substr( stringOffset + 9 ) ) );
-					
-					//Test code.
-					//cout << "Found ifSpeed: " << ifSpeed1 << " at: " << stringOffset + 8 << endl;
-
-					// Set the Interface object ifIndex to the newly found index.
-					interface1.setSpeed1( ( ifSpeed1 ) );
-
-					//Test code.
-					cout << "Class ifSpeed1: " << interface1.getSpeed1() << endl;
-				}
-			}
-			
-			// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.10.x).
-			// The ifInOctets is the numeric portion after "COUNTER32: ".  This number rolls to zero when it hits COUNTER32MAX.
-			if( walk1Array[i].find( IFINOCTETSOID ) != string::npos )
-			{
-				// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
-				if( ( stringOffset = walk1Array[i].find( "COUNTER32: " ) ) != string::npos )
-				{
-					//Test code.
-					//cout << "Found text: " << ( ( walk1Array[i].substr( stringOffset + 11 ) ) ) << endl;
-
-					// The actual speed should be 11 characters after INTEGER:
-					ifInOctets1 = stoul( ( walk1Array[i].substr( stringOffset + 11 ) ) );
-					
-					//Test code.
-					//cout << "Converted to UL int: " << ifInOctets1 << " at: " << stringOffset + 11 << endl;
-
-					// Set the Interface object ifIndex to the newly found index.
-					interface1.setInOctets1( ( ifInOctets1 ) );
-
-					//Test code.
-					cout << "Class ifInOctets1: " << interface1.getInOctets1() << endl;
-				}
-			}
-
-			// Search for ifOutOctets (.1.3.6.1.2.1.2.2.1.16.x).
-			// The ifInOctets is the numeric portion after "COUNTER32: ".  This number rolls to zero when it hits COUNTER32MAX.
-			if( walk1Array[i].find( IFOUTOCTETSOID ) != string::npos )
-			{
-				// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
-				if( ( stringOffset = walk1Array[i].find( "COUNTER32: " ) ) != string::npos )
-				{
-					// The actual speed should be 11 characters after INTEGER:
-					ifOutOctets1 = stoul( ( walk1Array[i].substr( stringOffset + 11 ) ) );
-					
-					//Test code.
-					//cout << "Found ifOutOctets1: " << ifOutOctets1 << " at: " << stringOffset + 11 << endl;
-
-					// Set the Interface object ifIndex to the newly found index.
-					interface1.setOutOctets1( ( ifOutOctets1 ) );
-
-					//Test code.
-					cout << "Class ifOutOctets1: " << interface1.getOutOctets1() << endl;
-				}
+				//Test code.
+				//cout << "Class ifIndex: " << interface1.getIndex() << endl;
 			}
 		}
+
+		// Search for ifDescr (.1.3.6.1.2.1.2.2.1.2.x).
+		// The ifDescr is the text portion after "STRING: ".
+		if( walk1Array[i].find( IFDESCROID ) != string::npos )
+		{
+			// Since we found the OID, search for the text STRING: since we know the actual index is 9 characters ater this.
+			if( ( stringOffset = walk1Array[i].find( "STRING: " ) ) != string::npos )
+			{
+				// The actual description should be 8 characters after INTEGER:
+				ifDescr = ( walk1Array[i].substr( stringOffset + 8 ) );
+					
+				//Test code.
+				//cout << "Found ifDescr: " << ifDescr << " at: " << stringOffset + 8 << endl;
+
+				// Set the Interface object ifIndex to the newly found index.
+				interface1.setDescr( ( ifDescr ) );
+
+				//Test code.
+				//cout << "Class ifDescr: " << interface1.getDescr() << endl;
+			}
+		}
+
+		// Search for ifSpeed (.1.3.6.1.2.1.2.2.1.5.x).
+		// The ifSpeed is the numeric portion after "GAUGE32: ".
+		if( walk1Array[i].find( IFSPEEDOID ) != string::npos )
+		{
+			// Since we found the OID, search for the text GAUGE32: since we know the actual index is 9 characters ater this.
+			if( ( stringOffset = walk1Array[i].find( "GAUGE32: " ) ) != string::npos )
+			{
+				// The actual speed should be 9 characters after INTEGER:
+				ifSpeed1 = stoi( ( walk1Array[i].substr( stringOffset + 9 ) ) );
+					
+				//Test code.
+				//cout << "Found ifSpeed: " << ifSpeed1 << " at: " << stringOffset + 8 << endl;
+
+				// Set the Interface object ifIndex to the newly found index.
+				interface1.setSpeed1( ( ifSpeed1 ) );
+
+				//Test code.
+				//cout << "Class ifSpeed1: " << interface1.getSpeed1() << endl;
+			}
+		}
+			
+		// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.10.x).
+		// The ifInOctets is the numeric portion after "COUNTER32: ".  This number rolls to zero when it hits COUNTER32MAX.
+		if( walk1Array[i].find( IFINOCTETSOID ) != string::npos )
+		{
+			// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
+			if( ( stringOffset = walk1Array[i].find( "COUNTER32: " ) ) != string::npos )
+			{
+				//Test code.
+				//cout << "Found text: " << ( ( walk1Array[i].substr( stringOffset + 11 ) ) ) << endl;
+
+				// The actual speed should be 11 characters after INTEGER:
+				ifInOctets1 = stoul( ( walk1Array[i].substr( stringOffset + 11 ) ) );
+					
+				//Test code.
+				//cout << "Converted to UL int: " << ifInOctets1 << " at: " << stringOffset + 11 << endl;
+
+				// Set the Interface object ifIndex to the newly found index.
+				interface1.setInOctets1( ( ifInOctets1 ) );
+
+				//Test code.
+				//cout << "Class ifInOctets1: " << interface1.getInOctets1() << endl;
+			}
+		}
+
+		// Search for ifOutOctets (.1.3.6.1.2.1.2.2.1.16.x).
+		// The ifInOctets is the numeric portion after "COUNTER32: ".  This number rolls to zero when it hits COUNTER32MAX.
+		if( walk1Array[i].find( IFOUTOCTETSOID ) != string::npos )
+		{
+			// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
+			if( ( stringOffset = walk1Array[i].find( "COUNTER32: " ) ) != string::npos )
+			{
+				// The actual speed should be 11 characters after INTEGER:
+				ifOutOctets1 = stoul( ( walk1Array[i].substr( stringOffset + 11 ) ) );
+					
+				//Test code.
+				//cout << "Found ifOutOctets1: " << ifOutOctets1 << " at: " << stringOffset + 11 << endl;
+
+				// Set the Interface object ifIndex to the newly found index.
+				interface1.setOutOctets1( ( ifOutOctets1 ) );
+
+				//Test code.
+				//cout << "Class ifOutOctets1: " << interface1.getOutOctets1() << endl;
+			}
+		}
+		cout << "Class:\n\tifIndex: " << interface1.getIndex() << "\n\tifDescr: " << interface1.getDescr() << "\n\tifSpeed: " << interface1.getSpeed1() << "\n\tifInOctets: " << interface1.getInOctets1() << "\n\tifOutOctets: " << interface1.getOutOctets1() << endl;
 		cout << endl;
 		//Test code.
 		cout << "Found " << indexCount << " interfaces in walk 1." << endl;
 	}
-	dataFile1.close();
 
 #pragma endregion Walk1
 #pragma region Walk2
@@ -398,6 +391,40 @@ int fileRead( ifstream& _handle, string _array[] )
 	}
 	return length;
 } // End fileRead().
+
+
+// Function name:	oidRead()
+// Purpose:		This function will read OID information into an Interface-class object.
+// Parameters:		An array of strings, the ifIndex to collect data for, and an Interface-class object to load the data into.
+// Returns:		none
+// Preconditions:	none
+// Postconditions:	none
+void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLength )
+{
+	// Read in ifSpeed, ifInOctets, and ifOutOctets.
+	// Later I may add discards and errors.
+	int stringOffset = 0;
+
+	// Loop through the first array until we find several OIDs.
+	for ( int i = 0; i < _arrayLength; i++ )
+	{
+		// Search for ifSpeed (.1.3.6.1.2.1.2.2.1.5.*).
+		if( _array[i].find( IFSPEEDOID + to_string( _ifIndex ) ) != string::npos )
+		{
+			//Test code.
+			//cout << "Line: " << _array[i] << endl;
+
+			if( ( stringOffset = _array[i].find( "GAUGE32: " ) ) != string::npos )
+			{
+				// The actual interface speed will be 9 characters after "GAUGE32: " at offest 32, and will not be a fixed length, so read to EOL.
+				_interface.setSpeed1( stoi( _array[i].substr( stringOffset + 9 ) ) );
+
+				//Test code.
+				cout << "oidRead found ifSpeed: " << _interface.getSpeed1() << " for ifIndex: " << _ifIndex << " at: " << stringOffset + 9 << endl;
+			}
+		}
+	}
+}
 
 
 // Function name:	splitString()

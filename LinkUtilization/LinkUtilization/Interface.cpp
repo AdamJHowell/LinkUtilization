@@ -48,7 +48,7 @@ void Interface::setDescr( const string& _description )
 // Returns:		none
 // Preconditions:	none
 // Postconditions:	none
-void Interface::setSpeed1( const int _speed1 )
+void Interface::setSpeed1( int _speed1 )
 {
 	ifSpeed1 = _speed1;
 }

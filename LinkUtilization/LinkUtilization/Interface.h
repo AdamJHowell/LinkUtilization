@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <string>
 #include <iostream>
 #include <string>
@@ -7,7 +8,26 @@
 #include <array>
 #include <boost/filesystem.hpp>
 
+
 using namespace std;
+
+
+const string HEADER1 = "This program will search two SNMP walks and provide information from them.\n";
+const string HEADER2 = "Please select the link you wish to calculate utilization for:\n";
+const string INFILE1 = "walk1.txt";					// Hard-coded input file 1.
+const string INFILE2 = "walk2.txt";					// Hard-coded input file 2.
+const string SYSUPTIMEOID = ".1.3.6.1.2.1.1.3.0";			// The OID for sysUpTime.
+const string IFINDEXOID = ".1.3.6.1.2.1.2.2.1.1.";		// The OID for ifIndex.
+const string IFDESCROID = ".1.3.6.1.2.1.2.2.1.2.";		// The OID for ifDescr.
+const string IFSPEEDOID = ".1.3.6.1.2.1.2.2.1.5.";		// The OID for ifSpeed.
+const string IFINOCTETSOID = ".1.3.6.1.2.1.2.2.1.10.";		// The OID for ifInOctets.
+const string IFOUTOCTETSOID = ".1.3.6.1.2.1.2.2.1.16.";	// The OID for ifOutOctets.
+const int PRECISION = 3;								// The number of decimal places to show for floats.
+const unsigned int COUNTER32MAX = 4294967295;			// The maximum value a Counter32 can hold.
+//const long COUNTER64MAX = 18446744073709551615;			// The maximum value a Counter64 can hold.
+const int ARRAYSIZE = 100000;							// The size of the array for the files.
+const int	MAXINTERFACE = 2000;						// The maximum number of interfaces this program can deal with.
+
 
 class Interface
 {
@@ -27,7 +47,7 @@ public:
 	Interface( int, string, int, int, int, int, int, int, int, int );	// Parameterized constructor.
 	void setIndex( const int );				// setIndex() will set the ifIndex for this interface.
 	void setDescr( const string& );			// setDescr() will set the ifDescr for this interface.
-	void setSpeed1( const int );				// setSpeed1() will set the ifSpeed1 for this interface.
+	void setSpeed1( int );				// setSpeed1() will set the ifSpeed1 for this interface.
 	void setSpeed2( const int );				// setSpeed2() will set the ifSpeed2 for this interface.
 	void setInOctets1( const unsigned long );	// setInOctets1() will set the ifInOctets1 for this interface.
 	void setInOctets2( const unsigned long );	// setInOctets2() will set the ifInOctets2 for this interface.
