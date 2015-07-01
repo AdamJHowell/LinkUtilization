@@ -11,23 +11,28 @@ I declare that the following source code was written by me, or is common knowled
 
 /*
 Pseudocode:
+1. Print the introduction
+2. List the PWD
+3. Read first walk into array1
+4. Read second walk into array2
+5. List all interfaces to the user
+6. Ask which interface to show stats for
+7. Scan both arrays for the chosen interface, and create an Interface class object
+8. Display stats from the Interface class object created for the chosen interface
+9. Loop back to step 5.
+
 Open the first walk.
 Read the first sysUpTime (.1.3.6.1.2.1.1.3.0).
 Locate all links in the first walk (1.3.6.1.2.1.2.2.1.1.*).
 Open the second walk.
 Read the second sysUpTime (.1.3.6.1.2.1.1.3.0).
 Locate all links in the second walk (1.3.6.1.2.1.2.2.1.1.*).
-Subtract the first sysUpTime from the second sysUpTime to get the timeDelta.
-Discard links that do not exist in both walks.  Optionally, print a list of these discareded links to the screen.
 If the second sysUpTime is not greater than the first, print an error and exit.
+Subtract the first sysUpTime from the second sysUpTime to get the timeDelta.
+Discard links that do not exist in both walks.  Optionally, print a list of these discarded links to the screen.
 Print to screen a list of links that exist in both walks and prompt the user which link to run utilization on (ifIndex).
 
-For the selected link, read from the first walk:
-	sysUpTime (.1.3.6.1.2.1.1.3.0)
-	ifSpeed (.1.3.6.1.2.1.2.2.1.5.13)
-	ifInOctets (.1.3.6.1.2.1.2.2.1.10.13) with its counter size
-	ifOutOctets (.1.3.6.1.2.1.2.2.1.16.13) with its counter size
-For the selected link, read from the second walk:
+For the selected link, read from the both walks:
 	ifSpeed (.1.3.6.1.2.1.2.2.1.5.13)
 	ifInOctets (.1.3.6.1.2.1.2.2.1.10.13) with its counter size
 	ifOutOctets (.1.3.6.1.2.1.2.2.1.16.13) with its counter size
@@ -36,19 +41,15 @@ Counter64 max value: 18446744073709551615
 If the ifSpeed values or counter sizes do not match, print an error and exit.
 Divide the timeDelta by the ifInSpeed to get maxRate.
 
-If the second ifInOctets is not greater than the first ifInOctets, add the counter size to the second ifInOctets.
-Subtract the first ifInOctets from the second ifInOctets to get the ifInDelta.
-Multiply the ifInDelta by 8, then by 100, then divide by maxRate to get inLinkUtilization.
-Display inLinkUtilization (along with other variables).
-
-If the second ifOutOctets is not greater than the first ifOutOctets, add the counter size to the second ifOutOctets.
-Subtract the first ifOutOctets from the second ifOutOctets to get the ifOutDelta.
-Multiply the ifOutDelta by 8, then by 100, then divide by maxRate to get outLinkUtilization.
-Display outLinkUtilization (along with other variables).
+To deal with counter roll-over:
+	If the second ifInOctets (or ifOutOctets) is not greater than the first, add the counter size to the second ifInOctets (or ifOutOctets).
+Subtract the first ifInOctets (or ifOutOctets) from the second ifInOctets (or ifOutOctets) to get the ifInDelta (or ifOutDelta).
+Multiply the delta by 8, then by 100, then divide by maxRate to get inLinkUtilization.
+Display link utilization (along with other stats).
 
 Sum ifInDelta with ifOutDelta to get ifTotalDelta.
 Multiply the ifTotalDelta by 8, then by 100, then divide by maxRate to get TotalLinkUtilization.
-Display TotalLinkUtilization (along with other variables).
+Display TotalLinkUtilization (along with other stats).
 */
 
 
@@ -58,6 +59,7 @@ Display TotalLinkUtilization (along with other variables).
 using namespace boost::filesystem;
 
 
+void greeting1( void );
 int fileRead( ifstream& _handle, string _array[] );									// My file reading function.
 void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLength, int _walkNumber );	// My interface populating function.
 void splitString( const string _str, string& _orig, string& _dest, int& _mile, int& _cost );	// My string splitting function.
@@ -69,6 +71,7 @@ int main()
 	string ifDescr = "";			// This string will contain the link description.
 	string readTemp = "";			// Temporary string to hold data, usually before converting it to an int.
 	string ifIndexArray[MAXINTERFACE];	// An array to hold all discovered interface descriptions, the ifIndex will be the array index.
+	int tempInt = 0;				// A temporary integer for random math needs.
 	int stringOffset = 0;			// The offest within the line where the search text was found.
 	int sysUpTime1 = 0;				// The system up time from the first walk.
 	int ifSpeed1 = 0;				// The interface speed for the selected link from the first walk.
@@ -94,28 +97,17 @@ int main()
 	// Set the decimal precision for float output.
 	cout.precision( PRECISION );
 
-	// Print the program header.
-	cout << HEADER1 << endl;
-
-	//if ( COUNTER32MAX > std::numeric_limits<unsigned long>::max() )
-	if ( COUNTER32MAX > sizeof( ifInOctets1 ) )
-	{
-		cout << "This system may not be able to operate on some interfaces." << endl;
-		cout << COUNTER32MAX << " > " << sizeof( ifInOctets1 ) << endl;
-	}
-	else
-	{
-		cout << "int: " << std::dec << std::numeric_limits<int>::max() << endl;
-	}
-
-	// Print the PWD to the screen.
-	boost::filesystem::path new_full_path( boost::filesystem::current_path() );
-	cout << "The SNMP walk files should be in this directory:\n" << new_full_path << '\n' << endl;
+	// Print the header and the PWD to the screen.
+	greeting1();
 
 	// Create arrays to hold each file.
 	string* walk1Array = new string[ARRAYSIZE];
 	string* walk2Array = new string[ARRAYSIZE];
-	
+
+	// Create arrays to hold each ifIndex and ifDescr.
+	string* walk1IndexDescr = new string[MAXINTERFACE];
+	string* walk2IndexDescr = new string[MAXINTERFACE];
+
 #pragma region Walk1
 
 	// Open a filestream for the first SNMP walk.
@@ -166,22 +158,32 @@ int main()
 				indexCount++;
 
 				// Set the Interface object ifIndex to the newly found index.
-				interface1.setIndex( stoi( ifIndex ) );
+				//interface1.setIndex( stoi( ifIndex ) );
 			}
 		}
 
 		// Search for ifDescr (.1.3.6.1.2.1.2.2.1.2.x).
-		// The ifDescr is the text portion after "STRING: ".
+		// The ifDescr is the text portion after " = STRING: ".
 		if( walk1Array[i].find( IFDESCROID ) != string::npos )
 		{
 			// Since we found the OID, search for the text STRING: since we know the actual index is 9 characters ater this.
-			if( ( stringOffset = walk1Array[i].find( "STRING: " ) ) != string::npos )
+			if( ( stringOffset = walk1Array[i].find( " = STRING: " ) ) != string::npos )
 			{
-				// The actual description should be 8 characters after INTEGER:
-				ifDescr = ( walk1Array[i].substr( stringOffset + 8 ) );
+				// The actual description should be 11 characters after " = STRING: ".
+				//ifDescr = ( walk1Array[i].substr( stringOffset + 11 ) );
+				
+				// Put the description text into walk1IndexDescr[].
+				walk1IndexDescr[stoi( walk1Array[i].substr( 21, stringOffset ) )] = ( walk1Array[i].substr( stringOffset + 11 ) );
 
+				//Test code.
+				//cout << "ifDescr in the file array: " << walk1Array[i].substr( stringOffset + 11 ) << endl;
+				//cout << "ifIndex in the file array: " << stoi( walk1Array[i].substr( 21, stringOffset ) ) << endl;
+
+				//Test code.
+				//cout << "walk1IndexDescr: " << walk1IndexDescr[stoi( walk1Array[i].substr( 21, stringOffset ) )] << endl;
+				
 				// Set the Interface object ifIndex to the newly found index.
-				interface1.setDescr( ( ifDescr ) );
+				//interface1.setDescr( ( ifDescr ) );
 			}
 		}
 	}
@@ -245,14 +247,24 @@ int main()
 			}
 
 			// Search for ifDescr (.1.3.6.1.2.1.2.2.1.2.x).
-			// The ifDescr is the text portion after "STRING: ".
+			// The ifDescr is the text portion after " = STRING: ".
 			if( walk2Array[i].find( IFDESCROID ) != string::npos )
 			{
 				// Since we found the OID, search for the text STRING: since we know the actual index is 9 characters ater this.
-				if( ( stringOffset = walk2Array[i].find( "STRING: " ) ) != string::npos )
+				if( ( stringOffset = walk2Array[i].find( " = STRING: " ) ) != string::npos )
 				{
-					// The actual description should be 8 characters after INTEGER:
-					ifDescr = ( walk2Array[i].substr( stringOffset + 8 ) );
+					// The actual description should be 11 characters after " = STRING: "
+					//ifDescr = ( walk2Array[i].substr( stringOffset + 11 ) );
+					
+					// Put the description text into walk2IndexDescr[].
+					walk2IndexDescr[stoi( walk2Array[i].substr( 21, stringOffset ) )] = ( walk2Array[i].substr( stringOffset + 11 ) );
+
+					//Test code.
+					//cout << "ifDescr in the file array: " << walk2Array[i].substr( stringOffset + 11 ) << endl;
+					//cout << "ifIndex in the file array: " << stoi( walk2Array[i].substr( 21, stringOffset ) ) << endl;
+
+					//Test code.
+					//cout << "walk2IndexDescr: " << walk2IndexDescr[stoi( walk2Array[i].substr( 21, stringOffset ) )] << endl;
 
 					// Set the Interface object ifIndex to the newly found index.
 					//interface1.setDescr( ( ifDescr ) );
@@ -304,6 +316,23 @@ int main()
 	system( "PAUSE" );
 	return 0;
 }// End main().
+
+
+// Function name:	greeting1()
+// Purpose:		This function will print greeting information and the present working directory to the user.
+// Parameters:		none
+// Returns:		none
+// Preconditions:	none
+// Postconditions:	none
+void greeting1( void )
+{
+	// Print the program header.
+	cout << HEADER1 << endl;
+
+	// Print the PWD to the screen.
+	boost::filesystem::path new_full_path( boost::filesystem::current_path() );
+	cout << "The SNMP walk files should be in this directory:\n" << new_full_path << '\n' << endl;
+}
 
 
 // Function name:	fileRead()
