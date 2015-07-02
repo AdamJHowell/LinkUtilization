@@ -12,8 +12,8 @@
 using namespace std;
 
 
-const string HEADER1 = "This program will search two SNMP walks and provide information from them.\n";
-const string HEADER2 = "Please select the link you wish to calculate utilization for:\n";
+const string HEADER1 = "This program will search two SNMP walks and provide interface stats from them.";
+const string HEADER2 = "Please enter the number for the link you wish to calculate stats for:";
 const string INFILE1 = "walk1.txt";					// Hard-coded input file 1.
 const string INFILE2 = "walk2.txt";					// Hard-coded input file 2.
 const string SYSUPTIMEOID = ".1.3.6.1.2.1.1.3.0";			// The OID for sysUpTime.
@@ -31,6 +31,7 @@ const unsigned int COUNTER32MAX = 4294967295;			// The maximum value a Counter32
 //const long COUNTER64MAX = 18446744073709551615;			// The maximum value a Counter64 can hold.
 const int ARRAYSIZE = 100000;							// The size of the array for the files.
 const int	MAXINTERFACE = 2000;						// The maximum number of interfaces this program can deal with.
+const int IGNORE = 4096;								// The number of characters to ignore from the cin buffer.
 
 
 class Interface
@@ -60,6 +61,7 @@ public:
 	void setOctetCounterSize1( const int );		// setOctetCounterSize1() will set the ifOctetCounterSize1 for this interface.
 	void setOctetCounterSize2( const int );		// setOctetCounterSize2() will set the ifOctetCounterSize2 for this interface.
 
+	void getInterface();								// getInterface() will display all values stored in the Interface object.
 	int getIndex() { return ifIndex; };					// getIndex() will return the ifIndex for this interface.
 	string getDescr() { return ifDescr; };					// getDescr() will return the ifDescr for this interface.
 	int getSpeed1() { return ifSpeed1; };					// getSpeed1() will return the ifSpeed1 for this interface.

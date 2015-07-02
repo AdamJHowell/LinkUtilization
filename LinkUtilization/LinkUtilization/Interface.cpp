@@ -138,6 +138,27 @@ void Interface::setOctetCounterSize2( const int _OctetCounterSize2 )
 }
 
 
+// Function name:	getInterface()
+// Purpose:		This function will print all variables in the Interface class object.
+// Parameters:		none
+// Returns:		none
+// Preconditions:	none
+// Postconditions:	none
+void Interface::getInterface( void )
+{
+	cout << "ifIndex: " << ifIndex << endl;
+	cout << "ifDescr: " << ifDescr << endl;
+	cout << "ifSpeed1: " << ifSpeed1 << endl;
+	cout << "ifSpeed2: " << ifSpeed2 << endl;
+	cout << "ifInOctets1: " << ifInOctets1 << endl;
+	cout << "ifInOctets2: " << ifInOctets2 << endl;
+	cout << "ifOutOctets1: " << ifOutOctets1 << endl;
+	cout << "ifOutOctets2: " << ifOutOctets2 << endl;
+	cout << "ifOctetCounterSize1: " << ifOctetCounterSize1 << endl;
+	cout << "ifOctetCounterSize2: " << ifOctetCounterSize2 << endl;
+}
+
+
 Interface::~Interface()
 {
 }
