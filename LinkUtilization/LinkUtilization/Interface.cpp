@@ -41,6 +41,29 @@ void Interface::setDescr( const string& _description )
 }
 
 
+// Function name:	setSysUpTime1()
+// Purpose:		This function will set the system uptime of the first walk to what is passed as a parameter.
+// Parameters:		Integer value for the system uptime.
+// Returns:		none
+// Preconditions:	none
+// Postconditions:	none
+void Interface::setSysUpTime1( const int _sysUpTime )
+{
+	sysUpTime1 = _sysUpTime;
+}
+
+
+// Function name:	setSysUpTime2()
+// Purpose:		This function will set the system uptime of the second walk to what is passed as a parameter.
+// Parameters:		Integer value for the system uptime.
+// Returns:		none
+// Preconditions:	none
+// Postconditions:	none
+void Interface::setSysUpTime2( const int _sysUpTime )
+{
+	sysUpTime2 = _sysUpTime;
+}
+
 
 // Function name:	setSpeed1()
 // Purpose:		This function will set the ifSpeed of the first walk of the Interface to what is passed as a parameter.
@@ -72,7 +95,7 @@ void Interface::setSpeed2( const int _speed2 )
 // Returns:		none
 // Preconditions:	none
 // Postconditions:	none
-void Interface::setInOctets1( const unsigned long _inOctets1 )
+void Interface::setInOctets1( const double _inOctets1 )
 {
 	ifInOctets1 = _inOctets1;
 }
@@ -84,7 +107,7 @@ void Interface::setInOctets1( const unsigned long _inOctets1 )
 // Returns:		none
 // Preconditions:	none
 // Postconditions:	none
-void Interface::setInOctets2( const unsigned long _inOctets2 )
+void Interface::setInOctets2( const double _inOctets2 )
 {
 	ifInOctets2 = _inOctets2;
 }
@@ -96,7 +119,7 @@ void Interface::setInOctets2( const unsigned long _inOctets2 )
 // Returns:		none
 // Preconditions:	none
 // Postconditions:	none
-void Interface::setOutOctets1( const unsigned long _outOctets1 )
+void Interface::setOutOctets1( const double _outOctets1 )
 {
 	ifOutOctets1 = _outOctets1;
 }
@@ -108,7 +131,7 @@ void Interface::setOutOctets1( const unsigned long _outOctets1 )
 // Returns:		none
 // Preconditions:	none
 // Postconditions:	none
-void Interface::setOutOctets2( const unsigned long _outOctets2 )
+void Interface::setOutOctets2( const double _outOctets2 )
 {
 	ifOutOctets2 = _outOctets2;
 }
@@ -148,14 +171,60 @@ void Interface::getInterface( void )
 {
 	cout << "ifIndex: " << ifIndex << endl;
 	cout << "ifDescr: " << ifDescr << endl;
+	cout << "sysUpTime1: " << sysUpTime1 << endl;
+	cout << "sysUpTime2: " << sysUpTime2 << endl;
 	cout << "ifSpeed1: " << ifSpeed1 << endl;
 	cout << "ifSpeed2: " << ifSpeed2 << endl;
-	cout << "ifInOctets1: " << ifInOctets1 << endl;
-	cout << "ifInOctets2: " << ifInOctets2 << endl;
-	cout << "ifOutOctets1: " << ifOutOctets1 << endl;
-	cout << "ifOutOctets2: " << ifOutOctets2 << endl;
-	cout << "ifOctetCounterSize1: " << ifOctetCounterSize1 << endl;
-	cout << "ifOctetCounterSize2: " << ifOctetCounterSize2 << endl;
+	cout << "ifInOctets1: " << unsigned long( ifInOctets1 ) << endl;
+	cout << "ifInOctets2: " << unsigned long( ifInOctets2 ) << endl;
+	cout << "ifOutOctets1: " << unsigned long( ifOutOctets1 ) << endl;
+	cout << "ifOutOctets2: " << unsigned long( ifOutOctets2 ) << endl;
+//	cout << "ifOctetCounterSize1: " << ifOctetCounterSize1 << endl;
+//	cout << "ifOctetCounterSize2: " << ifOctetCounterSize2 << endl;
+}
+
+
+// Function name:	getInterface()
+// Purpose:		This function will print all variables in the Interface class object.
+// Parameters:		none
+// Returns:		none
+// Preconditions:	none
+// Postconditions:	none
+double Interface::calculateUtilization( void )
+{
+	cout << "\nInterface: " << ifIndex << " - " << ifDescr << endl;
+
+	if( ifInOctets1 > ifInOctets2 )
+	{
+		ifInOctets2 = ifInOctets2 + COUNTER32MAX;
+	}
+	if( ifOutOctets1 > ifOutOctets2 )
+	{
+		ifOutOctets2 = ifOutOctets2 + COUNTER32MAX;
+	}
+	if( ifSpeed1 != ifSpeed2 )
+	{
+		cout << "Interface speeds did not match!" << endl;
+		return 1;
+	}
+	else
+	{
+		int timeDelta = ( ( sysUpTime2 - sysUpTime1 ) / 100 );
+		cout << "Time Delta: " << timeDelta << " seconds." << endl;
+		// Input Utilization.
+		double inOctetDelta = ifInOctets2 - ifInOctets1;
+		cout << "In Octet Delta: " << inOctetDelta << endl;
+		cout << "In Octet Mutiplication: " << ( inOctetDelta * 8 * 100 ) << endl;
+		cout << "Input Utilization: " << ( ( inOctetDelta * 8 * 100 ) / ( timeDelta * ifSpeed1 ) ) << endl;
+		// Output Utilization, forcing a double division.
+		double outOctetDelta = ifOutOctets2 - ifOutOctets1;
+		cout << "Out Octet Delta: " << outOctetDelta << endl;
+		cout << "Out Octet Mutiplication: " << ( outOctetDelta * 8 * 100 ) << endl;
+		cout << "Output Utilization: " << ( outOctetDelta * 8 * 100 ) / ( ( timeDelta ) * ifSpeed1 ) << endl;
+		// Total Utilization, forcing a double division.
+		cout << "Total Octet Delta: " << ( inOctetDelta + outOctetDelta ) << endl;
+		cout << "Total Utilization: " << ( ( inOctetDelta + outOctetDelta ) * 8 * 100 ) / ( timeDelta * ifSpeed1 / 2 ) << endl;
+	}
 }
 
 

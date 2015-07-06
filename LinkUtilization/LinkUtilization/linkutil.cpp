@@ -74,28 +74,15 @@ int main()
 	string ifIndexArray[MAXINTERFACE];	// An array to hold all discovered interface descriptions, the ifIndex will be the array index.
 	int selectedIfIndex = 0;			// The user-chosen interface to run stats on.
 	int stringOffset = 0;			// The offest within the line where the search text was found.
-	int sysUpTime1 = 0;				// The system up time from the first walk.
-	int ifSpeed1 = 0;				// The interface speed for the selected link from the first walk.
-	unsigned long ifInOctets1 = 0;	// The inbound octet count for the selected link from the first walk.
-	unsigned long ifOutOctets1 = 0;	// The outbound octet count for the selected link from the first walk.
-	int sysUpTime2 = 0;				// The system up time from the second walk.
-	int ifSpeed2 = 0;				// The interface speed for the selected link in the second walk
-	unsigned long ifInOctets2 = 0;	// The inbound octet count for the selected link in the second walk.
-	unsigned long ifOutOctets2 = 0;	// The outbound octet count for the selected link in the second walk.
 	int timeDelta = 0;				// The difference between the first and second up times.
 	int maxRate = 0;				// The maximum rate of the links.
-	int ifInDelta = 0;				// The difference between the first and second inbound octet counts.
-	int inLinkUtilization = 0; 		// The inbound link utilization.
-	int ifOutDelta = 0;				// The difference between the first and second outbound octet counts.
-	int outLinkUtilization = 0;		// The outbound link utilization.
-	int ifTotalDelta = 0;			// The sum of the inbound and outbound octet deltas.
-	int TotalLinkUtilization = 0;		// The total link utilization.
 	int fileCount1 = 0;				// The number of lines in input file 1.
 	int fileCount2 = 0;				// The number of lines in input file 2.
 	int ifIndexOffset = 0;			// The offset in characters of the ifIndex.
 
-	// Set the decimal precision for float output.
+	// Set the decimal precision for decimal output.
 	cout.precision( PRECISION );
+	cout.fixed;
 
 	// Print the header and the PWD to the screen.
 	greeting1();
@@ -154,55 +141,10 @@ int main()
 	}
 	dataFile1.close();
 
-	// Loop through the first array until we find sysUpTime, all ifIndexes, all ifDescrs.
-	for ( int i = 0; i < fileCount1; i++ )
-	{
-		// Search for sysUpTime (.1.3.6.1.2.1.1.3.0).
-		if( walk1Array[i].find( SYSUPTIMEOID ) != string::npos )
-		{
-			// The actual uptime ticks will be at offest 32, and will not be a fixed length, so read to EOL.
-			sysUpTime1 = stoi( walk1Array[i].substr( 32 ) );
-		}
-	}
-
-	// Loop through the first array until we find sysUpTime(.1.3.6.1.2.1.1.3.0).
-	for (int i = 0; i < fileCount2; i++)
-	{
-		// Search for sysUpTime (.1.3.6.1.2.1.1.3.0).
-		if( walk2Array[i].find( SYSUPTIMEOID ) != string::npos )
-		{
-			// The actual uptime ticks will be at offest 32, and will not be a fixed length, so read to EOL.
-			sysUpTime2 = stoi( walk2Array[i].substr( 32 ) );
-		}
-	}
-
-	// Store the difference in upTimes into ifInDelta, which we use for several calculations.
-	if( sysUpTime1 > sysUpTime2 )
-	{
-		cout << "The second walk had an earlier time than the first." << endl;
-	}
-	else
-	{
-		ifInDelta = ( ( sysUpTime2 - sysUpTime1 ) / 100 );
-		cout << "The time delta was:\n\t" << ifInDelta << " second";
-		if( ifInDelta > 1 )
-		{
-			cout << "s";
-		}
-		cout << "." << endl;
-		if( ifInDelta > 60 )
-		{
-			cout << '\t' << ( ( float ) ifInDelta / 60.0 ) << " minutes." << endl;
-		}
-		if( ifInDelta > 360 )
-		{
-			cout << '\t' << ( ( float ) ifInDelta / 60.0 / 60.0 ) << " hours." << endl;
-		}
-	}
-
+	// Discover all interfaces in both walks, and store in walk1IndexDescr.
 	locateInterfaces( walk1Array, walk2Array, walk1IndexDescr, fileCount1, fileCount2 );
 
-	// Display all discovered interfaces.
+	// Display all discovered interfaces from walk1IndexDescr.
 	selectedIfIndex = presentIndexes( walk1IndexDescr );
 
 	cout << "\nRunning stats on interface index " << selectedIfIndex << "..." << endl;
@@ -214,8 +156,34 @@ int main()
 	oidRead( walk1Array, selectedIfIndex, interface1, fileCount1, 1 );
 	oidRead( walk2Array, selectedIfIndex, interface1, fileCount2, 2 );
 
+	// Store the difference in upTimes into ifInDelta, which we use for several calculations.
+	if( interface1.getSysUpTime1() > interface1.getSysUpTime2() )
+	{
+		cout << "The second walk had an earlier time than the first." << endl;
+	}
+	else
+	{
+		// Subtract the time from the first walk from the time from the second walk, and convert into seconds.
+		timeDelta = ( ( interface1.getSysUpTime2() - interface1.getSysUpTime1() ) / 100 );
+		cout << "The time delta was:\n\t" << timeDelta << " second";
+		if( timeDelta > 1 )
+		{
+			cout << "s";
+		}
+		cout << "." << endl;
+		if( timeDelta > 60 )
+		{
+			cout << '\t' << ( ( double ) timeDelta / 60.0 ) << " minutes." << endl;
+		}
+		if( timeDelta > 360 )
+		{
+			cout << '\t' << ( ( double ) timeDelta / 60.0 / 60.0 ) << " hours." << endl;
+		}
+	}
+
 	//Test code.
 	interface1.getInterface();
+	interface1.calculateUtilization();
 
 	// Pause so the user can read the screen.
 	system( "PAUSE" );
@@ -295,7 +263,16 @@ void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLe
 	{
 		if( _walkNumber == 1 )
 		{
-			// Search for ifSpeed (.1.3.6.1.2.1.2.2.1.5.*).
+			// Search for sysUpTime (.1.3.6.1.2.1.1.3.0).
+			// The sysUptime is the numerical portion after " = GAUGE32: ".
+			if( _array[i].find( SYSUPTIMEOID ) != string::npos )
+			{
+				// The actual uptime ticks will be at offest 32, and will not be a fixed length, so read to EOL.
+				_interface.setSysUpTime1( stoi( _array[i].substr( 32 ) ) );
+			}
+
+			// Search for ifSpeed (.1.3.6.1.2.1.2.2.1.5._ifIndex).
+			// The ifSpeed is the numerical portion after " = GAUGE32: ".
 			if( _array[i].find( IFSPEEDOID + to_string( _ifIndex ) ) != string::npos )
 			{
 				if( ( stringOffset = _array[i].find( "GAUGE32: " ) ) != string::npos )
@@ -305,9 +282,9 @@ void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLe
 				}
 			}
 
-			// Search for ifDescr (.1.3.6.1.2.1.2.2.1.2.x).
+			// Search for ifDescr (.1.3.6.1.2.1.2.2.1.2._ifIndex).
 			// The ifDescr is the text portion after " = STRING: ".
-			if( _array[i].find( IFDESCROID ) != string::npos )
+			if( _array[i].find( IFDESCROID + to_string( _ifIndex ) ) != string::npos )
 			{
 				// Since we found the OID, search for the text STRING: since we know the actual index is 9 characters ater this.
 				if( ( stringOffset = _array[i].find( " = STRING: " ) ) != string::npos )
@@ -327,9 +304,9 @@ void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLe
 				}
 			}
 
-			// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.10.x).
+			// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.10._ifIndex).
 			// The ifInOctets is the numeric portion after "COUNTER32: ".  This number rolls to zero when it hits COUNTER32MAX.
-			if( _array[i].find( IFINOCTETSOID ) != string::npos )
+			if( _array[i].find( IFINOCTETSOID + to_string( _ifIndex ) ) != string::npos )
 			{
 				// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
 				if( ( stringOffset = _array[i].find( "COUNTER32: " ) ) != string::npos )
@@ -338,9 +315,10 @@ void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLe
 					_interface.setInOctets1( ( stoul( ( _array[i].substr( stringOffset + 11 ) ) ) ) );
 				}
 			}
-			// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.16.x).
+
+			// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.16._ifIndex).
 			// The ifInOctets is the numeric portion after "COUNTER32: ".  This number rolls to zero when it hits COUNTER32MAX.
-			if( _array[i].find( IFOUTOCTETSOID ) != string::npos )
+			if( _array[i].find( IFOUTOCTETSOID + to_string( _ifIndex ) ) != string::npos )
 			{
 				// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
 				if( ( stringOffset = _array[i].find( "COUNTER32: " ) ) != string::npos )
@@ -352,7 +330,16 @@ void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLe
 		}
 		else if( _walkNumber == 2 )
 		{
-			// Search for ifSpeed (.1.3.6.1.2.1.2.2.1.5.*).
+			// Search for sysUpTime (.1.3.6.1.2.1.1.3.0).
+			// The sysUptime is the numerical portion after " = GAUGE32: ".
+			if( _array[i].find( SYSUPTIMEOID ) != string::npos )
+			{
+				// The actual uptime ticks will be at offest 32, and will not be a fixed length, so read to EOL.
+				_interface.setSysUpTime2( stoi( _array[i].substr( 32 ) ) );
+			}
+
+			// Search for ifSpeed (.1.3.6.1.2.1.2.2.1.5._ifIndex).
+			// The ifSpeed is the numerical portion after " = GAUGE32: ".
 			if( _array[i].find( IFSPEEDOID + to_string( _ifIndex ) ) != string::npos )
 			{
 				if( ( stringOffset = _array[i].find( "GAUGE32: " ) ) != string::npos )
@@ -361,9 +348,10 @@ void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLe
 					_interface.setSpeed2( stoi( _array[i].substr( stringOffset + 9 ) ) );
 				}
 			}
-			// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.10.x).
+
+			// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.10._ifIndex).
 			// The ifInOctets is the numeric portion after "COUNTER32: ".  This number rolls to zero when it hits COUNTER32MAX.
-			if( _array[i].find( IFINOCTETSOID ) != string::npos )
+			if( _array[i].find( IFINOCTETSOID + to_string( _ifIndex ) ) != string::npos )
 			{
 				// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
 				if( ( stringOffset = _array[i].find( "COUNTER32: " ) ) != string::npos )
@@ -372,9 +360,10 @@ void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLe
 					_interface.setInOctets2( ( stoul( ( _array[i].substr( stringOffset + 11 ) ) ) ) );
 				}
 			}
-			// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.16.x).
+
+			// Search for ifInOctets (.1.3.6.1.2.1.2.2.1.16._ifIndex).
 			// The ifInOctets is the numeric portion after "COUNTER32: ".  This number rolls to zero when it hits COUNTER32MAX.
-			if( _array[i].find( IFOUTOCTETSOID ) != string::npos )
+			if( _array[i].find( IFOUTOCTETSOID + to_string( _ifIndex ) ) != string::npos )
 			{
 				// Since we found the OID, search for the text COUNTER32: since we know the actual index is 9 characters ater this.
 				if( ( stringOffset = _array[i].find( "COUNTER32: " ) ) != string::npos )
@@ -434,7 +423,7 @@ void locateInterfaces( string _array1[], string _array2[], string _array3[], int
 	// Loop through the first array until we find sysUpTime, all ifIndexes, all ifDescrs.
 	for( int i = 0; i < fileCount1; i++ )
 	{
-		// Search for ifDescr (.1.3.6.1.2.1.2.2.1.2.x).
+		// Search for ifDescr (.1.3.6.1.2.1.2.2.1.2.*).
 		// The ifDescr is the text portion after " = STRING: ".
 		if( _array1[i].find( IFDESCROID ) != string::npos )
 		{

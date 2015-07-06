@@ -1,2 +1,3 @@
-﻿  linkutil.cpp
+﻿  Interface.cpp
+c:\users\adam.howell\documents\github\linkutilization\linkutilization\linkutilization\interface.cpp(228): warning C4715: 'Interface::calculateUtilization' : not all control paths return a value
   LinkUtilization.vcxproj -> C:\Users\adam.howell\Documents\GitHub\LinkUtilization\LinkUtilization\Debug\LinkUtilization.exe

@@ -131,3 +131,14 @@ Once we know the desired ifIndex, we can send that to a function with each array
 7. Scan both arrays for the chosen interface, and create an Interface class object
 8. Display stats from the Interface class object created for the chosen interface
 9. Loop back to step 5.
+
+
+
+
+Next, need to check ifInOcetetCounterSize and ifOutOcetetCounterSize for both walks.  If any of those do not match the other 3, exit the program with an error message.
+
+
+
+Inbound Utilization = [ delta(ifInOctets) * 8 * 100 ] / [ delta(time) * ifSpeed ]
+Outbound Utilization = [ delta(ifOutOctets) * 8 * 100 ] / [ delta(time) * ifSpeed ]
+Total Utilization = [ delta(ifALLOctets) * 8 * 100 ] / [ delta(time) * ifSpeed ]
