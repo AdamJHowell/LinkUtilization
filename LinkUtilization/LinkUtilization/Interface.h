@@ -7,6 +7,7 @@
 #include <fstream>
 #include <array>
 #include <boost/filesystem.hpp>
+#include <iomanip>
 
 
 using namespace std;
@@ -40,8 +41,8 @@ class Interface
 private:
 	int ifIndex;				// The Interface Index: .1.3.6.1.2.1.2.2.1.1.*
 	string ifDescr;			// The Interface Description: .1.3.6.1.2.1.2.2.1.2.*
-	int sysUpTime1;			// The time read from the first walk.
-	int sysUpTime2;			// The time read from the second walk.
+	double sysUpTime1;			// The time read from the first walk.
+	double sysUpTime2;			// The time read from the second walk.
 	int ifSpeed1;				// The Interface Speed from the first walk.
 	int ifSpeed2;				// The Interface Speed from the second walk.
 	double ifInOctets1;			// The Interface Inbound Octet Count from the first walk.
@@ -70,8 +71,8 @@ public:
 	double calculateUtilization();						// calculateUtilization() will calculate the link utilization for this interface.
 	int getIndex() { return ifIndex; };					// getIndex() will return the ifIndex for this interface.
 	string getDescr() { return ifDescr; };					// getDescr() will return the ifDescr for this interface.
-	int getSysUpTime1() { return sysUpTime1; };				// getSysUpTime1() will return the system uptime from the first walk.
-	int getSysUpTime2() { return sysUpTime2; };				// getSysUpTime2() will return the system uptime from the second walk.
+	double getSysUpTime1() { return sysUpTime1; };			// getSysUpTime1() will return the system uptime from the first walk.
+	double getSysUpTime2() { return sysUpTime2; };			// getSysUpTime2() will return the system uptime from the second walk.
 	int getSpeed1() { return ifSpeed1; };					// getSpeed1() will return the ifSpeed1 for this interface.
 	int getSpeed2() { return ifSpeed2; };					// getSpeed2() will return the ifSpeed2 for this interface.
 	double getInOctets1() { return ifInOctets1; };			// getInOctets1() will return the ifInOctets1 for this interface.

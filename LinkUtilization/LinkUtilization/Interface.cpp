@@ -171,8 +171,8 @@ void Interface::getInterface( void )
 {
 	cout << "ifIndex: " << ifIndex << endl;
 	cout << "ifDescr: " << ifDescr << endl;
-	cout << "sysUpTime1: " << sysUpTime1 << endl;
-	cout << "sysUpTime2: " << sysUpTime2 << endl;
+	cout << fixed << setprecision( 0 ) << "sysUpTime1: " << sysUpTime1 << endl;
+	cout << fixed << setprecision( 0 ) << "sysUpTime2: " << sysUpTime2 << endl;
 	cout << "ifSpeed1: " << ifSpeed1 << endl;
 	cout << "ifSpeed2: " << ifSpeed2 << endl;
 	cout << "ifInOctets1: " << unsigned long( ifInOctets1 ) << endl;
@@ -184,10 +184,10 @@ void Interface::getInterface( void )
 }
 
 
-// Function name:	getInterface()
-// Purpose:		This function will print all variables in the Interface class object.
+// Function name:	calculateUtilization()
+// Purpose:		This function will calculate utilization for the Interface class object.
 // Parameters:		none
-// Returns:		none
+// Returns:		Total Utilization for the Interface class object.
 // Preconditions:	none
 // Postconditions:	none
 double Interface::calculateUtilization( void )
@@ -197,34 +197,42 @@ double Interface::calculateUtilization( void )
 	if( ifInOctets1 > ifInOctets2 )
 	{
 		ifInOctets2 = ifInOctets2 + COUNTER32MAX;
+		cout << fixed << setprecision( 0 ) << "Added the counter max to ifInOctets2 to yield: " << ifInOctets2 << endl;
 	}
 	if( ifOutOctets1 > ifOutOctets2 )
 	{
 		ifOutOctets2 = ifOutOctets2 + COUNTER32MAX;
+		cout << fixed << setprecision( 0 ) << "Added the counter max to ifOutOctets2 to yield: " << ifOutOctets2 << endl;
 	}
 	if( ifSpeed1 != ifSpeed2 )
 	{
 		cout << "Interface speeds did not match!" << endl;
 		return 1;
 	}
+	if( ifSpeed1 == 0 || ifSpeed2 == 0 )
+	{
+		cout << "And interface speed was zero!" << endl;
+		return 1;
+	}
 	else
 	{
-		int timeDelta = ( ( sysUpTime2 - sysUpTime1 ) / 100 );
-		cout << "Time Delta: " << timeDelta << " seconds." << endl;
+		double timeDelta = ( ( sysUpTime2 - sysUpTime1 ) / 100 );
+		double timeSpeedMult = timeDelta * ifSpeed1;
+		cout << fixed << setprecision( 0 ) << "Time Delta: " << timeDelta << " seconds." << endl;
+		cout << "ifSpeed: " << ifSpeed1 << endl;
+
 		// Input Utilization.
 		double inOctetDelta = ifInOctets2 - ifInOctets1;
-		cout << "In Octet Delta: " << inOctetDelta << endl;
-		cout << "In Octet Mutiplication: " << ( inOctetDelta * 8 * 100 ) << endl;
-		cout << "Input Utilization: " << ( ( inOctetDelta * 8 * 100 ) / ( timeDelta * ifSpeed1 ) ) << endl;
-		// Output Utilization, forcing a double division.
+		cout << fixed << setprecision( 3 ) << "Input Utilization: " << ( inOctetDelta * 8 * 100 ) / timeSpeedMult << endl;
+
+		// Output Utilization.
 		double outOctetDelta = ifOutOctets2 - ifOutOctets1;
-		cout << "Out Octet Delta: " << outOctetDelta << endl;
-		cout << "Out Octet Mutiplication: " << ( outOctetDelta * 8 * 100 ) << endl;
-		cout << "Output Utilization: " << ( outOctetDelta * 8 * 100 ) / ( ( timeDelta ) * ifSpeed1 ) << endl;
-		// Total Utilization, forcing a double division.
-		cout << "Total Octet Delta: " << ( inOctetDelta + outOctetDelta ) << endl;
-		cout << "Total Utilization: " << ( ( inOctetDelta + outOctetDelta ) * 8 * 100 ) / ( timeDelta * ifSpeed1 / 2 ) << endl;
-		return ( ( inOctetDelta + outOctetDelta ) * 8 * 100 ) / ( timeDelta * ifSpeed1 / 2 );
+		cout << fixed << setprecision( 3 ) << "Output Utilization: " << ( outOctetDelta * 8 * 100 ) / timeSpeedMult << endl;
+
+		// Total Utilization.
+		double totalDelta = ( ( inOctetDelta + outOctetDelta ) * 8 * 100 );
+		cout << fixed << setprecision( 3 ) << "Total Utilization: " << ( totalDelta / timeSpeedMult / 2 ) << endl;
+		return ( totalDelta / timeSpeedMult / 2 );
 	}
 }
 

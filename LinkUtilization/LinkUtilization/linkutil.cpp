@@ -162,7 +162,7 @@ int main()
 	{
 		// Subtract the time from the first walk from the time from the second walk, and convert into seconds.
 		timeDelta = ( ( interface1.getSysUpTime2() - interface1.getSysUpTime1() ) / 100 );
-		cout << "The time delta was:\n\t" << timeDelta << " second";
+		cout << fixed << setprecision( 0 ) << "The time delta was:\n\t" << timeDelta << " second";
 		if( timeDelta > 1 )
 		{
 			cout << "s";
@@ -170,11 +170,11 @@ int main()
 		cout << "." << endl;
 		if( timeDelta > 60 )
 		{
-			cout << '\t' << ( ( double ) timeDelta / 60.0 ) << " minutes." << endl;
+			cout << fixed << setprecision( 1 ) << '\t' << ( ( double ) timeDelta / 60.0 ) << " minutes." << endl;
 		}
 		if( timeDelta > 360 )
 		{
-			cout << '\t' << ( ( double ) timeDelta / 60.0 / 60.0 ) << " hours." << endl;
+			cout << fixed << setprecision( 2 ) << '\t' << ( ( double ) timeDelta / 60.0 / 60.0 ) << " hours." << endl;
 		}
 	}
 
