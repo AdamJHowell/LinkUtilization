@@ -56,14 +56,11 @@ Display TotalLinkUtilization (along with other stats).
 #include "Interface.h"
 
 
-using namespace boost::filesystem;
-
-
-void greeting1( void );
-int fileRead( ifstream& _handle, string _array[] );									// My file reading function.
-void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLength, int _walkNumber );	// My interface populating function.
-int presentIndexes( string _array[] );
-void locateInterfaces( string _array1[], string _array2[], string _array3[], int fileCount1, int fileCount2 );
+void greeting1( void );																			// My greeting function.
+int fileRead( ifstream& _handle, string _array[] );													// My file reading function.
+void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLength, int _walkNumber );			// My interface populating function.
+int presentIndexes( string _array[] );																// My function for presenting the discovered indexes to the user.
+void locateInterfaces( string _array1[], string _array2[], string _array3[], int fileCount1, int fileCount2 );	// My function to locate all interfaces in the walks.
 
 
 int main()

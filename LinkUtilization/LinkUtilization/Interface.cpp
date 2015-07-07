@@ -224,6 +224,7 @@ double Interface::calculateUtilization( void )
 		// Total Utilization, forcing a double division.
 		cout << "Total Octet Delta: " << ( inOctetDelta + outOctetDelta ) << endl;
 		cout << "Total Utilization: " << ( ( inOctetDelta + outOctetDelta ) * 8 * 100 ) / ( timeDelta * ifSpeed1 / 2 ) << endl;
+		return ( ( inOctetDelta + outOctetDelta ) * 8 * 100 ) / ( timeDelta * ifSpeed1 / 2 );
 	}
 }
 
