@@ -204,38 +204,34 @@ double Interface::calculateUtilization( void )
 		ifOutOctets2 = ifOutOctets2 + COUNTER32MAX;
 		cout << fixed << setprecision( 0 ) << "Added the counter max to ifOutOctets2 to yield: " << ifOutOctets2 << endl;
 	}
-	// Error checking.
 	if( ifSpeed1 != ifSpeed2 )
 	{
-		cout << "The interface speeds did not match!" << endl;
+		cout << "Interface speeds did not match!" << endl;
 		return 1;
 	}
-	else if( ifSpeed1 == 0 )
+	if( ifSpeed1 == 0 || ifSpeed2 == 0 )
 	{
-		cout << "The interface speed was zero for the first walk!" << endl;
-		return 1;
-	}
-	else if( ifSpeed2 == 0 )
-	{
-		cout << "The interface speed was zero for the second walk!" << endl;
+		cout << "And interface speed was zero!" << endl;
 		return 1;
 	}
 	else
 	{
 		double timeDelta = ( ( sysUpTime2 - sysUpTime1 ) / 100 );
 		double timeSpeedMult = timeDelta * ifSpeed1;
-		double inOctetDelta = ifInOctets2 - ifInOctets1;
-		double outOctetDelta = ifOutOctets2 - ifOutOctets1;
-		double totalDelta = ( ( inOctetDelta + outOctetDelta ) * 8 * 100 );
+		cout << fixed << setprecision( 0 ) << "Time Delta: " << timeDelta << " seconds." << endl;
+		cout << "ifSpeed: " << ifSpeed1 << endl;
 
-		// Print the table header.
-		cout << "Utilization: " << endl;
-		cout << "Input\tOutput\tTotal" << endl;
-		// Print the utilization numbers.
-		cout << fixed << setprecision( 3 ) << ( inOctetDelta * 8 * 100 ) / timeSpeedMult;
-		cout << "\t" << ( outOctetDelta * 8 * 100 ) / timeSpeedMult;
-		cout << "\t" << ( totalDelta / timeSpeedMult / 2 ) << endl;
-		// Return the total utilization.
+		// Input Utilization.
+		double inOctetDelta = ifInOctets2 - ifInOctets1;
+		cout << fixed << setprecision( 3 ) << "Input Utilization: " << ( inOctetDelta * 8 * 100 ) / timeSpeedMult << endl;
+
+		// Output Utilization.
+		double outOctetDelta = ifOutOctets2 - ifOutOctets1;
+		cout << fixed << setprecision( 3 ) << "Output Utilization: " << ( outOctetDelta * 8 * 100 ) / timeSpeedMult << endl;
+
+		// Total Utilization.
+		double totalDelta = ( ( inOctetDelta + outOctetDelta ) * 8 * 100 );
+		cout << fixed << setprecision( 3 ) << "Total Utilization: " << ( totalDelta / timeSpeedMult / 2 ) << endl;
 		return ( totalDelta / timeSpeedMult / 2 );
 	}
 }
