@@ -69,14 +69,11 @@ int main()
 	string ifDescr = "";			// This string will contain the link description.
 	string readTemp = "";			// Temporary string to hold data, usually before converting it to an int.
 	string ifIndexArray[MAXINTERFACE];	// An array to hold all discovered interface descriptions, the ifIndex will be the array index.
-	int selectedIfIndex = 0;			// The user-chosen interface to run stats on.
-	int stringOffset = 0;			// The offest within the line where the search text was found.
-	int timeDelta = 0;				// The difference between the first and second up times.
-	int maxRate = 0;				// The maximum rate of the links.
+	int selectedIfIndex = 1;			// The user-chosen interface to run stats on.
+	double timeDelta = 0;			// The difference between the first and second up times.
 	int fileCount1 = 0;				// The number of lines in input file 1.
 	int fileCount2 = 0;				// The number of lines in input file 2.
-	int ifIndexOffset = 0;			// The offset in characters of the ifIndex.
-
+	
 	// Set the decimal precision for decimal output.
 	cout.precision( PRECISION );
 	cout.fixed;
@@ -134,53 +131,67 @@ int main()
 			// Read the entire file into the array.
 			fileCount2 = fileRead( dataFile2, walk2Array );
 		}
+		// Close the second walk.
 		dataFile2.close();
 	}
+	// Close the first walk.
 	dataFile1.close();
 
 	// Discover all interfaces in both walks, and store in walk1IndexDescr.
 	locateInterfaces( walk1Array, walk2Array, walk1IndexDescr, fileCount1, fileCount2 );
 
-	// Display all discovered interfaces from walk1IndexDescr.
-	selectedIfIndex = presentIndexes( walk1IndexDescr );
-
-	cout << "\nRunning stats on interface index " << selectedIfIndex << "..." << endl;
-
-	// Create an Interface class object.
-	Interface interface1;
-
-	// Populate that interface class object.
-	oidRead( walk1Array, selectedIfIndex, interface1, fileCount1, 1 );
-	oidRead( walk2Array, selectedIfIndex, interface1, fileCount2, 2 );
-
-	// Store the difference in upTimes into ifInDelta, which we use for several calculations.
-	if( interface1.getSysUpTime1() > interface1.getSysUpTime2() )
+	do
 	{
-		cout << "The second walk had an earlier time than the first." << endl;
-	}
-	else
-	{
-		// Subtract the time from the first walk from the time from the second walk, and convert into seconds.
-		timeDelta = ( ( interface1.getSysUpTime2() - interface1.getSysUpTime1() ) / 100 );
-		cout << fixed << setprecision( 0 ) << "The time delta was:\n\t" << timeDelta << " second";
-		if( timeDelta > 1 )
-		{
-			cout << "s";
-		}
-		cout << "." << endl;
-		if( timeDelta > 60 )
-		{
-			cout << fixed << setprecision( 1 ) << '\t' << ( ( double ) timeDelta / 60.0 ) << " minutes." << endl;
-		}
-		if( timeDelta > 360 )
-		{
-			cout << fixed << setprecision( 2 ) << '\t' << ( ( double ) timeDelta / 60.0 / 60.0 ) << " hours." << endl;
-		}
-	}
+		// Display all discovered interfaces from walk1IndexDescr.
+		selectedIfIndex = presentIndexes( walk1IndexDescr );
 
-	//Test code.
-	interface1.getInterface();
-	interface1.calculateUtilization();
+		if( selectedIfIndex != 0 )
+		{
+			cout << "\nRunning stats on interface index " << selectedIfIndex << "..." << endl;
+
+			// Create an Interface class object.
+			Interface interface1;
+
+			// Populate that interface class object.
+			oidRead( walk1Array, selectedIfIndex, interface1, fileCount1, 1 );
+			oidRead( walk2Array, selectedIfIndex, interface1, fileCount2, 2 );
+
+			// Store the difference in upTimes into ifInDelta, which we use for several calculations.
+			if( interface1.getSysUpTime1() > interface1.getSysUpTime2() )
+			{
+				cout << "The second walk had an earlier time than the first." << endl;
+			}
+			else
+			{
+				// Subtract the time from the first walk from the time from the second walk, and convert into seconds.
+				timeDelta = ( ( interface1.getSysUpTime2() - interface1.getSysUpTime1() ) / 100 );
+				cout << fixed << setprecision( 0 ) << "The time delta was: " << timeDelta << " second";
+				if( timeDelta > 1 )
+				{
+					cout << "s";
+				}
+				if( timeDelta > 60 )
+				{
+					cout << fixed << setprecision( 1 ) << " (" << ( ( double ) timeDelta / 60.0 ) << " minutes)";
+				}
+				if( timeDelta > 360 )
+				{
+					cout << fixed << setprecision( 2 ) << " (" << ( ( double ) timeDelta / 60.0 / 60.0 ) << " hours)";
+				}
+				cout << ".";
+			}
+
+			//Test code.
+			//interface1.getInterface();
+
+			// Calculate and display the utilization for the Interface class object.
+			interface1.calculateUtilization();
+		}
+		else
+		{
+			cout << "\nExiting the program." << endl;
+		}
+	} while( selectedIfIndex != 0 );
 
 	// Pause so the user can read the screen.
 	system( "PAUSE" );
@@ -201,7 +212,7 @@ void greeting1( void )
 
 	// Print the PWD to the screen.
 	boost::filesystem::path new_full_path( boost::filesystem::current_path() );
-	cout << "The SNMP walk files should be in this directory:\n" << new_full_path << '\n' << endl;
+	cout << "The SNMP walk files should be in this directory:\n" << new_full_path << endl;
 } // End greeting1().
 
 
@@ -325,6 +336,7 @@ void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLe
 				}
 			}
 		}
+		// Still to do: Perform extra checking for walk 2, verify that the ifSpeed matches the first walk.
 		else if( _walkNumber == 2 )
 		{
 			// Search for sysUpTime (.1.3.6.1.2.1.1.3.0).
