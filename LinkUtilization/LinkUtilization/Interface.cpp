@@ -16,6 +16,12 @@ Interface::Interface()
 }
 
 
+Interface::Interface( int _ifIndex, string _ifDescr )
+{
+	ifIndex = _ifIndex;
+	ifDescr = _ifDescr;
+}
+
 
 // Function name:	setIndex()
 // Purpose:		This function will set the ifIndex of the Interface to what is passed as a parameter.
@@ -255,10 +261,12 @@ double Interface::calculateUtilization( void )
 		// Print the table header.
 		cout << "Utilization: " << endl;
 		cout << "Input\tOutput\tTotal" << endl;
+
 		// Print the utilization numbers.
 		cout << fixed << setprecision( 3 ) << ( inOctetDelta * 8 * 100 ) / timeSpeedMult;
 		cout << "\t" << ( outOctetDelta * 8 * 100 ) / timeSpeedMult;
 		cout << "\t" << ( totalDelta / timeSpeedMult / 2 ) << endl;
+
 		// Return the total utilization.
 		return ( totalDelta / timeSpeedMult / 2 );
 	}

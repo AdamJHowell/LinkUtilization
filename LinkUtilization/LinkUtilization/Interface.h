@@ -8,6 +8,8 @@
 #include <array>
 #include <boost/filesystem.hpp>
 #include <iomanip>
+#include <vector>
+#include <time.h>
 
 
 using namespace std;
@@ -33,7 +35,7 @@ const double COUNTER32MAX = 4294967295;					// The maximum value a Counter32 can
 const int ARRAYSIZE = 100000;							// The size of the array for the files.
 const int	MAXINTERFACE = 2000;						// The maximum number of interfaces this program can deal with.
 const int IGNORE = 4096;								// The number of characters to ignore from the cin buffer.
-const int PRECISION = 8;								// The number of decimal places to show for decimals.
+const int PRECISION = 3;								// The number of decimal places to show for decimals.
 
 
 class Interface
@@ -54,6 +56,7 @@ private:
 public:
 	Interface();							// Default constructor.
 //	Interface( int, string, int, int, int, int, int, int, int, int );	// Parameterized constructor.
+	Interface( int, string );				// Partially parameterized constructor.
 	void setIndex( const int );				// setIndex() will set the ifIndex for this interface.
 	void setDescr( const string& );			// setDescr() will set the ifDescr for this interface.
 	void setSysUpTime1( const int );			// setSysUpTime1() will set the system uptime from the first walk.

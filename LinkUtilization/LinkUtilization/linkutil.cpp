@@ -60,7 +60,8 @@ void greeting1( void );																			// My greeting function.
 int fileRead( ifstream& _handle, string _array[] );													// My file reading function.
 void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLength, int _walkNumber );			// My interface populating function.
 int presentIndexes( string _array[] );																// My function for presenting the discovered indexes to the user.
-void locateInterfaces( string _array1[], string _array2[], string _array3[], int fileCount1, int fileCount2 );	// My function to locate all interfaces in the walks.
+void locateInterfaces( string _array1[], string _array2[], string _array3[], int _fileCount1, int _fileCount2 );	// My function to locate all interfaces in the walks.
+void calculateAll( string _array1[], string _array2[] );
 
 
 int main()
@@ -68,6 +69,8 @@ int main()
 	int selectedIfIndex = 1;			// The user-chosen interface to run stats on.
 	int fileCount1 = 0;				// The number of lines in input file 1.
 	int fileCount2 = 0;				// The number of lines in input file 2.
+	clock_t start;
+	clock_t end;
 	
 	// Set the decimal precision for decimal output.
 	cout.precision( PRECISION );
@@ -102,6 +105,12 @@ int main()
 		// Test code.
 		//cout << "Opened \"" << INFILE1 << "\" for reading." << endl;
 
+		// Get the starting clock tick.
+		start = clock();
+
+		// Inform the user that we are reading the files, so they understand the dealy.
+		cout << "Reading the SNMP walk files into memory." << endl;
+
 		// Read the entire file into the array.
 		fileCount1 = fileRead( dataFile1, walk1Array );
 
@@ -128,12 +137,30 @@ int main()
 		}
 		// Close the second walk.
 		dataFile2.close();
+
+		// Get the ending clock tick.
+		end = clock();
+
+		//Test code.
+		cout << "Reading the files took " << ( double( end - start ) / double( CLK_TCK ) ) << " seconds." << endl;
 	}
 	// Close the first walk.
 	dataFile1.close();
 
+	// Inform the user that we are scanning the arrays for interfaces.
+	cout << "Searching memory for interface data." << endl;
+
+	// Get the starting clock tick.
+	start = clock();
+
 	// Discover all interfaces in both walks, and store in walk1IndexDescr.
 	locateInterfaces( walk1Array, walk2Array, walk1IndexDescr, fileCount1, fileCount2 );
+
+	// Get the ending clock tick.
+	end = clock();
+
+	//Test code.
+	cout << "Scanning memory took " << ( double( end - start ) / double( CLK_TCK ) ) << " seconds." << endl;
 
 	do
 	{
@@ -160,8 +187,8 @@ int main()
 		}
 		else if( selectedIfIndex == -1 )
 		{
-			// Display all indexes.
-// Here is where I will use the presentIndexes() code to pipe every discovered interface into oidRead(), twice, once for each walk.
+			// Pipe every discovered interface into oidRead(), twice, once for each walk.
+			calculateAll( walk1Array, walk2Array );
 		}
 		else
 		{
@@ -197,41 +224,29 @@ void greeting1( void )
 // Function name:	fileRead()
 // Purpose:		This function will read the content of the provided file handle into an array.
 // Parameters:		The file handle to read, and an array to write to.
-// Returns:		The length of the file read.
+// Returns:		The number of lines read from the file handle.
 // Preconditions:	none
 // Postconditions:	none
 int fileRead( ifstream& _handle, string _array[] )
 {
-	string fileStr = "";	// Variable to temporarily hold the contents read from the file.
 	int length = 0;		// Variable to count the lines in the file.
 
 	// Loop until End Of File, reading one number at a time.
 	while ( !_handle.eof() )
 	{
-		// Test code.
-		//cout << "Entered the while() loop." << endl;
-
-		// Read one line from dataFile1 into fileStr.
-		getline( _handle, fileStr );
-
-		// Test code.
-		//cout << "Read line as " << fileStr << endl;
-
-		// Insert the line read from the file into the array.
-		_array[length] = fileStr;
+		// Read one line from _handle into _array[] at offset 'length'.
+		getline( _handle, _array[length] );
 
 		// Increment length.
 		length++;
-
-		// Test code.
-		//cout << "Total values read so far: " << length << endl;
 	}
+	// Return how many lines were read in.
 	return length;
 } // End fileRead().
 
 
 // Function name:	oidRead()
-// Purpose:		This function will read OID information into an Interface-class object.
+// Purpose:		This function will read OID information, from an array, into an Interface-class object.
 // Parameters:		An array of strings, the ifIndex to collect data for, and an Interface-class object to load the data into.
 // Returns:		none
 // Preconditions:	none
@@ -422,7 +437,7 @@ int presentIndexes( string _array[] )
 // Returns:		none
 // Preconditions:	none
 // Postconditions:	none
-void locateInterfaces( string _array1[], string _array2[], string _array3[], int fileCount1, int fileCount2 )
+void locateInterfaces( string _array1[], string _array2[], string _descrArray[], int fileCount1, int fileCount2 )
 {
 	int tempOffset = 0;
 	// Loop through the first array until we find sysUpTime, all ifIndexes, all ifDescrs.
@@ -436,15 +451,44 @@ void locateInterfaces( string _array1[], string _array2[], string _array3[], int
 			if( ( tempOffset = _array1[i].find( " = STRING: " ) ) != string::npos )
 			{
 				// Put the description text into walk1IndexDescr[] at the location of ifIndex.
-				_array3[stoi( _array1[i].substr( 21, tempOffset ) )] = ( _array1[i].substr( tempOffset + 11 ) );
-
-				//Test code.
-				//cout << "ifDescr in the file array: " << walk1Array[i].substr( stringOffset + 11 ) << endl;
-				//cout << "ifIndex in the file array: " << stoi( walk1Array[i].substr( 21, stringOffset ) ) << endl;
-
-				//Test code.
-				//cout << "walk1IndexDescr: " << walk1IndexDescr[stoi( walk1Array[i].substr( 21, stringOffset ) )] << endl;
+				_descrArray[stoi( _array1[i].substr( 21, tempOffset ) )] = ( _array1[i].substr( tempOffset + 11 ) );
 			}
 		}
 	}
 } // End locateInterfaces().
+
+
+// Function name:	calculateAll()
+// Purpose:		This function will scan the provided arrays for interfaces, and store all interface information in Interface class objects.
+// Parameters:		Two arrays of strings, each containing one walk.
+// Returns:		none
+// Preconditions:	none
+// Postconditions:	none
+void calculateAll( string _array1[], string _array2[] )
+{
+	vector<Interface *> allTheInterfaces;		// Set up a vector of Interface class objects.
+
+	// Print the table header.
+	cout << "Utilization: " << endl;
+	cout << "Input\tOutput\tTotal" << endl;
+
+	// Cycle through the ifDescr array, sending each interface to Interface::calculateUtilization().
+	for( size_t i = 0; i <= sizeof( _array1 ); i++ )
+	{
+		if( _array1[i] != "" )
+		{
+			cout << i << endl;
+			//oidRead( walk1Array, i, interface1, fileCount1, 1 );
+			//oidRead( walk2Array, i, interface1, fileCount2, 2 );
+			//void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLength, int _walkNumber )
+			allTheInterfaces.push_back( new Interface ( i, _array1[i]) );
+			//cout << allTheInterfaces.at(i)->getIndex() << endl;
+		}
+	}
+
+	// Print the utilization numbers.
+	//cout << fixed << setprecision( 3 ) << ( inOctetDelta * 8 * 100 ) / timeSpeedMult;
+	//cout << "\t" << ( outOctetDelta * 8 * 100 ) / timeSpeedMult;
+	//cout << "\t" << ( totalDelta / timeSpeedMult / 2 ) << endl;
+
+} // End calculateAll().
