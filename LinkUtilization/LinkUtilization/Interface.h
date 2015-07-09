@@ -15,7 +15,7 @@ using namespace boost::filesystem;
 
 
 const string HEADER1 = "This program will search two SNMP walks and provide interface stats from them.";
-const string HEADER2 = "Please enter the number for the link you wish to calculate stats for:";
+const string HEADER2 = "Please enter the number for the link you wish to calculate stats for,\n    or \"0\" to exit.";
 const string INFILE1 = "walk1.txt";					// Hard-coded input file 1.
 const string INFILE2 = "walk2.txt";					// Hard-coded input file 2.
 const string SYSUPTIMEOID = ".1.3.6.1.2.1.1.3.0";			// The OID for sysUpTime.
