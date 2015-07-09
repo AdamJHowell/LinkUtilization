@@ -65,12 +65,7 @@ void locateInterfaces( string _array1[], string _array2[], string _array3[], int
 
 int main()
 {
-	string ifIndex = "";			// This is a string, because it will be taken as the users choice and suffixed to the "base" OIDs.
-	string ifDescr = "";			// This string will contain the link description.
-	string readTemp = "";			// Temporary string to hold data, usually before converting it to an int.
-	string ifIndexArray[MAXINTERFACE];	// An array to hold all discovered interface descriptions, the ifIndex will be the array index.
 	int selectedIfIndex = 1;			// The user-chosen interface to run stats on.
-	double timeDelta = 0;			// The difference between the first and second up times.
 	int fileCount1 = 0;				// The number of lines in input file 1.
 	int fileCount2 = 0;				// The number of lines in input file 2.
 	
@@ -145,51 +140,34 @@ int main()
 		// Display all discovered interfaces from walk1IndexDescr.
 		selectedIfIndex = presentIndexes( walk1IndexDescr );
 
-		if( selectedIfIndex != 0 )
+		// Create an Interface class object.
+		Interface interface1;
+
+		if( selectedIfIndex > 0 )
 		{
 			cout << "\nRunning stats on interface index " << selectedIfIndex << "..." << endl;
-
-			// Create an Interface class object.
-			Interface interface1;
-
+			
 			// Populate that interface class object.
 			oidRead( walk1Array, selectedIfIndex, interface1, fileCount1, 1 );
 			oidRead( walk2Array, selectedIfIndex, interface1, fileCount2, 2 );
 
-			// Store the difference in upTimes into ifInDelta, which we use for several calculations.
-			if( interface1.getSysUpTime1() > interface1.getSysUpTime2() )
-			{
-				cout << "The second walk had an earlier time than the first." << endl;
-			}
-			else
-			{
-				// Subtract the time from the first walk from the time from the second walk, and convert into seconds.
-				timeDelta = ( ( interface1.getSysUpTime2() - interface1.getSysUpTime1() ) / 100 );
-				cout << fixed << setprecision( 0 ) << "The time delta was: " << timeDelta << " second";
-				if( timeDelta > 1 )
-				{
-					cout << "s";
-				}
-				if( timeDelta > 60 )
-				{
-					cout << fixed << setprecision( 1 ) << " (" << ( ( double ) timeDelta / 60.0 ) << " minutes)";
-				}
-				if( timeDelta > 360 )
-				{
-					cout << fixed << setprecision( 2 ) << " (" << ( ( double ) timeDelta / 60.0 / 60.0 ) << " hours)";
-				}
-				cout << ".";
-			}
-
-			//Test code.
-			//interface1.getInterface();
-
 			// Calculate and display the utilization for the Interface class object.
 			interface1.calculateUtilization();
 		}
-		else
+		else if( selectedIfIndex == 0 )
 		{
 			cout << "\nExiting the program." << endl;
+		}
+		else if( selectedIfIndex == -1 )
+		{
+			// Display all indexes.
+// Here is where I will use the presentIndexes() code to pipe every discovered interface into oidRead(), twice, once for each walk.
+		}
+		else
+		{
+			cout << "\nUnrecognized answer." << endl;
+			// Pause so the user can think about what they have done.
+			system( "PAUSE" );
 		}
 	} while( selectedIfIndex != 0 );
 
@@ -398,7 +376,7 @@ void oidRead( string _array[], int _ifIndex, Interface& _interface, int _arrayLe
 // Postconditions:	none
 int presentIndexes( string _array[] )
 {
-	int menuAnswer = 0;
+	string menuAnswer = "a";
 	// Prompt the user for the interface to run stats on.
 	cout << "\n" << HEADER2 << endl;
 
@@ -416,7 +394,25 @@ int presentIndexes( string _array[] )
 	// Flush the input buffer.
 	cin.ignore( IGNORE, '\n' );
 
-	return menuAnswer;
+	if( menuAnswer == "a" || menuAnswer == "A" )
+	{
+		// The case to display all interfaces.
+		return -1;
+	}
+	else if( stoi( menuAnswer ) <= 0 )
+	{
+		// The case to exit on.
+		return 0;
+	}
+	else if( menuAnswer >= ":" || menuAnswer <= "/" )
+	{
+		// Catch everything outside of the numeric range.
+		return -2;
+	}
+	else
+	{
+		return stoi( menuAnswer );
+	}
 } // End presentIndexes().
 
 

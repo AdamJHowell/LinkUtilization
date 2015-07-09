@@ -192,6 +192,30 @@ void Interface::getInterface( void )
 // Postconditions:	none
 double Interface::calculateUtilization( void )
 {
+	// Store the difference in upTimes into ifInDelta, which we use for several calculations.
+	if( sysUpTime1 > sysUpTime2 )
+	{
+		cout << "The second walk had an earlier time than the first." << endl;
+	}
+	else
+	{
+		// Subtract the time from the first walk from the time from the second walk, and convert into seconds.
+		double timeDelta = ( ( sysUpTime2 - sysUpTime1 ) / 100 );
+		cout << fixed << setprecision( 0 ) << "The time delta was: " << timeDelta << " second";
+		if( timeDelta > 1 )
+		{
+			cout << "s";
+		}
+		if( timeDelta > 60 )
+		{
+			cout << fixed << setprecision( 1 ) << " (" << ( ( double ) timeDelta / 60.0 ) << " minutes)";
+		}
+		if( timeDelta > 360 )
+		{
+			cout << fixed << setprecision( 2 ) << " (" << ( ( double ) timeDelta / 60.0 / 60.0 ) << " hours)";
+		}
+		cout << ".";
+	}
 	cout << "\nInterface: " << ifIndex << " - " << ifDescr << endl;
 
 	if( ifInOctets1 > ifInOctets2 )
